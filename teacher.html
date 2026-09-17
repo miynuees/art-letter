@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e8d7c3">
+<meta name="robots" content="noindex, nofollow">
+<title>아트 레터 · 선생님 페이지</title>
+<style>
+:root{
+  --paper:#fdfaf3; --paper-deep:#f6ecd9; --terracotta:#c97b5a; --terracotta-deep:#b3644a;
+  --sage:#8fae8b; --sage-deep:#729471; --ink:#4a3f38; --sub:#9a8b7c;
+  --card:#fffefb; --line:#ece1cf; --danger:#c65f5f;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  background:var(--paper); color:var(--ink); min-height:100vh;
+}
+button{font-family:inherit; cursor:pointer;}
+input,textarea,select{font-family:inherit;}
+.hidden{display:none !important;}
+
+/* ───── 비번 ───── */
+.gate-wrap{max-width:380px; margin:0 auto; padding:70px 20px;}
+.gate-card{
+  background:var(--card); border:1px solid var(--line); border-radius:20px; padding:32px 26px; text-align:center;
+  box-shadow:0 10px 28px rgba(150,120,90,.09);
+}
+.gate-card h2{font-size:21px; margin:10px 0 6px; font-weight:800; color:var(--terracotta-deep);}
+.gate-card p{font-size:13px; color:var(--sub); margin:0 0 20px;}
+.gate-card input{
+  width:100%; border:1px solid var(--line); border-radius:11px; padding:12px; font-size:16px; text-align:center;
+  letter-spacing:4px; background:#fffefc; color:var(--ink);
+}
+.gate-card input:focus{outline:none; border-color:var(--terracotta);}
+.gate-btn{
+  width:100%; border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:800; color:#fff; margin-top:12px;
+  background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep));
+}
+
+/* ───── 헤더 ───── */
+.topbar{
+  position:sticky; top:0; z-index:20; background:rgba(253,250,243,.95); backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line); padding:14px 20px 0;
+}
+.topbar-inner{max-width:1000px; margin:0 auto;}
+.brand{display:flex; align-items:center; gap:9px;}
+.brand h1{font-size:18px; margin:0; font-weight:800; color:var(--terracotta-deep);}
+.brand small{display:block; font-size:11.5px; color:var(--sub); margin-top:1px;}
+.nav-btn{
+  margin-left:auto; border:1px solid var(--line); background:#fff; color:var(--sub);
+  font-size:12px; font-weight:700; padding:7px 12px; border-radius:10px; text-decoration:none;
+}
+.tabs{display:flex; gap:4px; margin-top:12px; overflow-x:auto;}
+.tab{
+  flex:0 0 auto; border:none; background:none; color:var(--sub); font-size:13.5px; font-weight:800;
+  padding:10px 14px; border-bottom:3px solid transparent;
+}
+.tab.on{color:var(--terracotta-deep); border-bottom-color:var(--terracotta);}
+
+main{max-width:1000px; margin:0 auto; padding:20px 20px 80px;}
+
+/* ───── 공통 ───── */
+.bar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+.chip{
+  border:1px solid var(--line); background:#fff; color:var(--sub); font-size:12.5px; font-weight:700;
+  padding:7px 13px; border-radius:20px; white-space:nowrap;
+}
+.chip.on{background:var(--terracotta); border-color:var(--terracotta); color:#fff;}
+.btn{
+  border:1px solid var(--line); background:#fff; color:var(--ink); font-size:12.5px; font-weight:700;
+  padding:8px 13px; border-radius:10px;
+}
+.btn.primary{background:var(--sage-deep); border-color:var(--sage-deep); color:#fff;}
+.spacer{margin-left:auto;}
+.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:14px;}
+.card h3{font-size:14px; margin:0 0 12px; font-weight:800; color:var(--sage-deep);}
+.muted{font-size:12.5px; color:var(--sub); line-height:1.7;}
+
+/* ───── 요약 숫자 ───── */
+.stat-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+.stat{
+  flex:1; min-width:120px; background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px 16px;
+}
+.stat b{display:block; font-size:24px; font-weight:800; color:var(--terracotta-deep); line-height:1.2;}
+.stat span{font-size:12px; color:var(--sub); font-weight:700;}
+
+/* ───── 명단 표 ───── */
+table{width:100%; border-collapse:collapse; font-size:13.5px;}
+th,td{padding:10px 8px; text-align:left; border-bottom:1px solid var(--line);}
+th{font-size:11.5px; color:var(--sub); font-weight:800; white-space:nowrap;}
+td.center,th.center{text-align:center;}
+tr.done{background:#fbfdfa;}
+.dot{display:inline-block; font-size:14px;}
+.dot.yes{color:var(--sage-deep);}
+.dot.half{color:#d3a44e;}
+.dot.no{color:#d8ccbb;}
+.name-cell{font-weight:700;}
+.media-cell{font-size:12.5px; color:var(--sub);}
+.link-cell{color:var(--terracotta-deep); font-weight:800; font-size:12.5px; cursor:pointer;}
+
+/* ───── 매체 분포 ───── */
+.dist-row{display:flex; align-items:center; gap:10px; margin-bottom:9px;}
+.dist-name{width:150px; flex:none; font-size:13px; font-weight:700;}
+.dist-bar{flex:1; height:22px; background:var(--paper-deep); border-radius:7px; overflow:hidden; min-width:40px;}
+.dist-fill{height:100%; background:linear-gradient(90deg,var(--sage),var(--sage-deep)); border-radius:7px;}
+.dist-num{width:38px; flex:none; text-align:right; font-size:13px; font-weight:800; color:var(--sage-deep);}
+.dist-who{font-size:11.5px; color:var(--sub); margin:-4px 0 12px 160px; line-height:1.6;}
+
+/* ───── 레터 ───── */
+.letter-item{
+  background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:10px; overflow:hidden;
+}
+.letter-head{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; padding:14px 16px; text-align:left;}
+.letter-who{font-size:12px; font-weight:800; color:var(--sage-deep); flex:none; width:110px;}
+.letter-title{font-size:14px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.letter-arrow{margin-left:auto; color:var(--sub); font-weight:800; font-size:12px; flex:none;}
+.letter-body{padding:4px 20px 22px; border-top:1px dashed var(--line);}
+.l-sub{font-size:13px; color:var(--terracotta-deep); font-weight:700; margin:14px 0 4px;}
+.l-meta{font-size:11.5px; color:var(--sub); margin-bottom:14px;}
+.l-label{font-size:11.5px; font-weight:800; color:var(--terracotta-deep); margin:20px 0 7px;}
+.l-kw{display:flex; gap:6px; flex-wrap:wrap; margin:12px 0;}
+.l-kw span{background:var(--paper-deep); color:var(--sage-deep); font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:11px;}
+.l-kwhead{display:flex; align-items:center; gap:8px; margin:18px 0 5px;}
+.l-kwhead b{background:var(--paper-deep); color:var(--sage-deep); font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:7px;}
+.l-kwhead i{font-style:normal; font-size:15px; font-weight:800;}
+.l-content{font-size:14.5px; line-height:1.85;}
+.l-content img{max-width:100%; border-radius:10px; display:block; margin:12px auto;}
+.l-content hr{border:none; border-top:2px dashed var(--line); margin:20px 0;}
+.l-summary{background:var(--paper-deep); border-radius:12px; padding:13px 15px; font-size:13.5px; line-height:1.8; white-space:pre-line;}
+
+textarea.roster{
+  width:100%; min-height:110px; border:1px solid var(--line); border-radius:11px; padding:11px;
+  font-size:13px; line-height:1.7; background:#fffefc; color:var(--ink); resize:vertical;
+}
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff;
+  padding:11px 20px; border-radius:12px; font-size:13.5px; font-weight:600; z-index:100; opacity:0; pointer-events:none;
+  transition:.25s;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+/* ───── 인쇄(PDF 저장) ───── */
+@media print{
+  .topbar, .bar, .no-print, .toast{display:none !important;}
+  body{background:#fff;}
+  main{padding:0; max-width:none;}
+  .card, .letter-item{border:none; box-shadow:none; margin:0 0 10px;}
+  .letter-body{page-break-after:always; border-top:none;}
+  .letter-head{border-bottom:2px solid #ddd;}
+  table{font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ───────── 비밀번호 ───────── -->
+<div id="gate">
+  <div class="gate-wrap">
+    <div class="gate-card">
+      <div style="font-size:40px;">🔑</div>
+      <h2>선생님 페이지</h2>
+      <p>비밀번호를 입력해주세요</p>
+      <input id="pw" type="password" inputmode="numeric" maxlength="8" placeholder="••••">
+      <button class="gate-btn" onclick="tryEnter()">들어가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────── 본문 ───────── -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span style="font-size:21px;">🗂️</span>
+        <div>
+          <h1>아트 레터 · 선생님 페이지</h1>
+          <small id="headCount">불러오는 중…</small>
+        </div>
+        <a class="nav-btn" href="index.html">✉️ 학생 화면</a>
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-tab="status" onclick="goTab('status')">📊 진행 현황</button>
+        <button class="tab" data-tab="media" onclick="goTab('media')">🧭 매체 분포</button>
+        <button class="tab" data-tab="letters" onclick="goTab('letters')">💌 레터 모아보기</button>
+        <button class="tab" data-tab="roster" onclick="goTab('roster')">👥 명단</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- 진행 현황 -->
+    <section id="tab-status">
+      <div class="stat-row" id="statRow"></div>
+      <div class="bar">
+        <div id="classChips" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        <button class="btn spacer" onclick="copyMissing('letter')">📋 레터 미제출 명단 복사</button>
+        <button class="btn" onclick="copyMissing('media')">📋 테스트 미실시 명단 복사</button>
+        <button class="btn" onclick="window.print()">🖨️ 인쇄 · PDF</button>
+      </div>
+      <div class="card">
+        <div id="statusTable"></div>
+      </div>
+    </section>
+
+    <!-- 매체 분포 -->
+    <section id="tab-media" class="hidden">
+      <div class="bar">
+        <div id="classChips2" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        <button class="btn spacer" onclick="window.print()">🖨️ 인쇄 · PDF</button>
+      </div>
+      <div class="card">
+        <h3>매체 테스트 결과 분포</h3>
+        <div id="distBox"></div>
+        <div class="muted" id="distEmpty"></div>
+      </div>
+    </section>
+
+    <!-- 레터 -->
+    <section id="tab-letters" class="hidden">
+      <div class="bar">
+        <div id="classChips3" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        <button class="btn spacer" onclick="toggleAll(true)">전부 펼치기</button>
+        <button class="btn" onclick="toggleAll(false)">전부 접기</button>
+        <button class="btn primary" onclick="window.print()">🖨️ 인쇄 · PDF</button>
+      </div>
+      <div class="muted no-print" style="margin-bottom:12px;">
+        펼친 레터만 인쇄돼요. 한 명 것만 뽑으려면 그 레터만 펼친 뒤 인쇄를 누르세요.
+      </div>
+      <div id="letterBox"></div>
+    </section>
+
+    <!-- 명단 -->
+    <section id="tab-roster" class="hidden">
+      <div class="card">
+        <h3>우리 반 명단 (선택)</h3>
+        <div class="muted" style="margin-bottom:12px;">
+          한 줄에 <b>학번 이름</b> 형식으로 붙여넣어 주세요. 넣어두면 아직 아무것도 안 한 학생까지 현황에 나와서,
+          미제출자를 정확히 알 수 있어요. 안 넣으면 한 번이라도 들어온 학생만 보입니다.<br>
+          이 명단은 선생님 브라우저에만 저장되고 서버로 가지 않아요.
+        </div>
+        <textarea class="roster" id="rosterText" placeholder="20201 김하늘&#10;20202 이서연&#10;20203 박지우"></textarea>
+        <div class="bar" style="margin:12px 0 0;">
+          <button class="btn primary" onclick="saveRoster()">저장</button>
+          <button class="btn" onclick="clearRoster()">지우기</button>
+          <span class="muted" id="rosterInfo"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ───── Firebase (학생 화면과 같은 곳) ───── */
+const firebaseConfig = {
+  apiKey: "AIzaSyBtSooSc-eg4zMHQ_QF-ErmYJmtaYT1Fkg",
+  authDomain: "limi-88231.firebaseapp.com",
+  projectId: "limi-88231",
+  storageBucket: "limi-88231.firebasestorage.app",
+  messagingSenderId: "361025367626",
+  appId: "1:361025367626:web:19d4e19d54558d4a79c0b3"
+};
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  // 학교 와이파이처럼 실시간 연결이 막히는 곳에서도 붙도록
+  db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+} catch (e) { console.error('Firebase 초기화 실패', e); }
+
+const el = (id) => document.getElementById(id);
+function toast(msg) {
+  const t = el('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ───── 비밀번호 ───── */
+const PW = '0615';
+const PW_KEY = 'artLetterTeacher';
+function tryEnter() {
+  if (el('pw').value.trim() !== PW) { toast('비밀번호가 달라요'); return; }
+  try { sessionStorage.setItem(PW_KEY, '1'); } catch (e) {}
+  enter();
+}
+function enter() {
+  el('gate').classList.add('hidden');
+  el('app').classList.remove('hidden');
+  start();
+}
+el('pw').addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(); });
+
+/* ───── 데이터 ───── */
+let letters = [], drafts = [], results = [];
+let activeClass = '전체';
+const ready = new Set();          // 응답이 온 컬렉션
+const failed = [];                // 못 읽은 컬렉션
+
+function start() {
+  if (!db) { toast('연결에 실패했어요'); return; }
+  watch('art_letters', d => { letters = d; });
+  watch('art_letter_drafts', d => { drafts = d; });
+  watch('art_media_results', d => { results = d; });
+  loadRoster();
+}
+function watch(name, setter) {
+  db.collection(name).onSnapshot(snap => {
+    setter(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    ready.add(name);
+    renderAll();
+  }, err => {
+    // 하나가 막혀도 나머지는 보이게 한다
+    console.error(name, err);
+    if (!failed.includes(name)) failed.push(name);
+    ready.add(name);
+    renderAll();
+  });
+}
+
+/* ───── 명단 ───── */
+const ROSTER_KEY = 'artLetterRoster';
+let roster = [];   // [{sid, name}]
+function parseRoster(text) {
+  return (text || '').split('\n').map(line => {
+    const m = line.trim().match(/^(\d{4,6})\s+(.+)$/);
+    return m ? { sid: m[1], name: m[2].trim() } : null;
+  }).filter(Boolean);
+}
+function loadRoster() {
+  let text = '';
+  try { text = localStorage.getItem(ROSTER_KEY) || ''; } catch (e) {}
+  el('rosterText').value = text;
+  roster = parseRoster(text);
+  el('rosterInfo').textContent = roster.length ? `${roster.length}명 저장돼 있어요` : '아직 안 넣었어요';
+}
+function saveRoster() {
+  const text = el('rosterText').value;
+  try { localStorage.setItem(ROSTER_KEY, text); } catch (e) {}
+  roster = parseRoster(text);
+  el('rosterInfo').textContent = `${roster.length}명 저장했어요`;
+  toast(`명단 ${roster.length}명을 저장했어요`);
+  renderAll();
+}
+function clearRoster() {
+  if (!confirm('명단을 지울까요?')) return;
+  el('rosterText').value = '';
+  try { localStorage.removeItem(ROSTER_KEY); } catch (e) {}
+  roster = [];
+  el('rosterInfo').textContent = '아직 안 넣었어요';
+  renderAll();
+}
+
+/* ───── 학번 → 반 ───── */
+function parseSid(sid) {
+  const cut = { 4: [1, 1], 5: [1, 2], 6: [1, 2] }[String(sid).length];
+  if (!cut) return null;
+  const s = String(sid);
+  const cls = parseInt(s.slice(cut[0], cut[0] + cut[1]), 10);
+  const num = parseInt(s.slice(cut[0] + cut[1]), 10);
+  if (!cls || !num) return null;
+  return { className: `${s.slice(0, cut[0])}-${cls}`, studentNumber: num };
+}
+
+/* ───── 학생 한 명으로 합치기 ───── */
+function buildStudents() {
+  const map = new Map();
+  const put = (sid, name, className, num) => {
+    if (!sid) return null;
+    if (!map.has(sid)) {
+      const p = parseSid(sid) || {};
+      map.set(sid, {
+        sid,
+        name: name || '',
+        className: className || p.className || '?',
+        num: num != null ? Number(num) : (p.studentNumber || 0),
+        letter: null, draft: null, media: null
+      });
+    }
+    const st = map.get(sid);
+    if (name && !st.name) st.name = name;
+    return st;
+  };
+
+  roster.forEach(r => put(r.sid, r.name));
+  results.forEach(r => { const st = put(r.sid || r.id, r.studentName, r.className, r.studentNumber); if (st) st.media = r; });
+  drafts.forEach(d => { const st = put(d.sid || d.id, d.studentName, d.className, d.studentNumber); if (st) st.draft = d; });
+  letters.forEach(l => {
+    if (isSample(l)) return;
+    const st = put(l.sid, l.studentName, l.className, l.studentNumber);
+    if (st) st.letter = l;   // 여러 번 냈으면 마지막 것
+  });
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.className.localeCompare(b.className, 'ko') || a.num - b.num || a.name.localeCompare(b.name, 'ko'));
+}
+function isSample(l) { return !!l.isSample || l.className === '예시'; }
+function classList(students) {
+  return Array.from(new Set(students.map(s => s.className).filter(c => c && c !== '?')))
+    .sort((a, b) => a.localeCompare(b, 'ko'));
+}
+function inClass(s) { return activeClass === '전체' || s.className === activeClass; }
+
+/* ───── 화면 ───── */
+function goTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name));
+  ['status', 'media', 'letters', 'roster'].forEach(t =>
+    el('tab-' + t).classList.toggle('hidden', t !== name));
+  window.scrollTo(0, 0);
+}
+function pickClass(c) { activeClass = c; renderAll(); }
+
+function renderAll() {
+  if (ready.size < 3) return;
+  const students = buildStudents();
+  renderChips(students);
+  renderStatus(students);
+  renderMedia(students);
+  renderLetters();
+  const mine = students.filter(inClass);
+  el('headCount').textContent =
+    `학생 ${mine.length}명 · 레터 ${mine.filter(s => s.letter).length}편 · 테스트 ${mine.filter(s => s.media).length}명`
+    + (failed.length ? ` · ⚠️ 못 읽음: ${failed.join(', ')}` : '');
+}
+
+function renderChips(students) {
+  const names = ['전체', ...classList(students)];
+  ['classChips', 'classChips2', 'classChips3'].forEach(boxId => {
+    const box = el(boxId);
+    box.innerHTML = '';
+    names.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (c === activeClass ? ' on' : '');
+      b.textContent = c;
+      b.onclick = () => pickClass(c);
+      box.appendChild(b);
+    });
+  });
+}
+
+function renderStatus(students) {
+  const mine = students.filter(inClass);
+  const doneL = mine.filter(s => s.letter).length;
+  const doneM = mine.filter(s => s.media).length;
+  const writing = mine.filter(s => !s.letter && s.draft).length;
+  el('statRow').innerHTML = `
+    <div class="stat"><b>${mine.length}</b><span>학생</span></div>
+    <div class="stat"><b>${doneM}</b><span>매체 테스트 완료</span></div>
+    <div class="stat"><b>${writing}</b><span>레터 작성 중</span></div>
+    <div class="stat"><b>${doneL}</b><span>레터 제출 완료</span></div>`;
+
+  if (!mine.length) {
+    el('statusTable').innerHTML = '<div class="muted">아직 들어온 학생이 없어요. 명단 탭에 반 명단을 넣어두면 미리 볼 수 있어요.</div>';
+    return;
+  }
+  const rows = mine.map(s => {
+    const media = s.media ? `<span class="media-cell">${escapeHtml(s.media.mediaName || '')}</span>` : '<span class="dot no">·</span>';
+    const letterState = s.letter
+      ? '<span class="dot yes">●</span>'
+      : (s.draft ? '<span class="dot half">◐</span>' : '<span class="dot no">○</span>');
+    const title = s.letter ? escapeHtml(s.letter.letterTitle || '')
+      : (s.draft ? `<span class="muted">${escapeHtml(s.draft.letterTitle || '(제목 아직)')}</span>` : '');
+    return `<tr class="${s.letter ? 'done' : ''}">
+      <td>${escapeHtml(s.className)}</td>
+      <td class="center">${s.num || ''}</td>
+      <td class="name-cell">${escapeHtml(s.name || '(이름 없음)')}</td>
+      <td>${media}</td>
+      <td class="center">${letterState}</td>
+      <td>${title}</td>
+    </tr>`;
+  }).join('');
+  el('statusTable').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>반</th><th class="center">번호</th><th>이름</th><th>매체 테스트</th>
+        <th class="center">레터</th><th>제목</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="muted" style="margin-top:12px;">
+      레터 ● 제출 완료 · ◐ 쓰는 중 · ○ 아직
+    </div>`;
+}
+
+function copyMissing(kind) {
+  const mine = buildStudents().filter(inClass);
+  const miss = mine.filter(s => kind === 'letter' ? !s.letter : !s.media);
+  if (!miss.length) { toast('모두 다 했어요 🎉'); return; }
+  const text = miss.map(s => `${s.sid} ${s.name}`).join('\n');
+  navigator.clipboard.writeText(text)
+    .then(() => toast(`${miss.length}명 명단을 복사했어요`))
+    .catch(() => { prompt('아래 명단을 복사하세요', text); });
+}
+
+function renderMedia(students) {
+  const mine = students.filter(inClass).filter(s => s.media);
+  const box = el('distBox');
+  if (!mine.length) {
+    box.innerHTML = '';
+    el('distEmpty').textContent = '아직 매체 테스트를 한 학생이 없어요.';
+    return;
+  }
+  el('distEmpty').textContent = '';
+  const group = new Map();
+  mine.forEach(s => {
+    const key = s.media.mediaName || '(알 수 없음)';
+    if (!group.has(key)) group.set(key, []);
+    group.get(key).push(s);
+  });
+  const sorted = Array.from(group.entries()).sort((a, b) => b[1].length - a[1].length);
+  const max = sorted[0][1].length;
+  box.innerHTML = sorted.map(([name, list]) => `
+    <div class="dist-row">
+      <div class="dist-name">${escapeHtml(name)}</div>
+      <div class="dist-bar"><div class="dist-fill" style="width:${list.length / max * 100}%"></div></div>
+      <div class="dist-num">${list.length}명</div>
+    </div>
+    <div class="dist-who">${list.map(s => escapeHtml(`${s.num}번 ${s.name}`)).join(' · ')}</div>
+  `).join('');
+}
+
+/* ───── 레터 전문 ───── */
+function letterDate(l) {
+  const d = l.createdAt && l.createdAt.toDate ? l.createdAt.toDate() : null;
+  return d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : '';
+}
+function letterHtml(l) {
+  const kws = l.keywords || [];
+  let h = '';
+  h += `<div class="l-sub">${escapeHtml([l.artworkTitle, l.artistName, l.medium].filter(Boolean).join(' · '))}</div>`;
+  h += `<div class="l-meta">${escapeHtml(letterDate(l))}${letterDate(l) ? ' 작성' : ''}</div>`;
+  h += `<div class="l-content">${l.introHtml || ''}</div>`;
+  if (kws.length) h += `<div class="l-kw">${kws.map(k => `<span>${escapeHtml(k)}</span>`).join('')}</div>`;
+  if (l.artistHtml) h += `<div class="l-label">작가 이야기</div><div class="l-content">${l.artistHtml}</div>`;
+
+  const perKeyword = !!l.detailHtmls;
+  const details = l.detailHtmls || (l.detailHtml ? [l.detailHtml] : []);
+  if (details.some(x => x)) {
+    h += `<div class="l-label">자세히 들여다보기</div>`;
+    details.forEach((d, i) => {
+      if (!d) return;
+      if (perKeyword && kws[i]) h += `<div class="l-kwhead"><b>키워드 ${i + 1}</b><i>${escapeHtml(kws[i])}</i></div>`;
+      h += `<div class="l-content">${d}</div>`;
+    });
+  }
+  if (l.closingHtml) h += `<div class="l-label">마무리</div><div class="l-content">${l.closingHtml}</div>`;
+  if (l.summaryText) h += `<div class="l-label">오늘의 레터 요약</div><div class="l-summary">${escapeHtml(l.summaryText)}</div>`;
+  return h;
+}
+
+function renderLetters() {
+  const list = letters
+    .filter(l => activeClass === '전체' || l.className === activeClass)
+    .sort((a, b) => (a.className || '').localeCompare(b.className || '', 'ko')
+      || (Number(a.studentNumber) || 0) - (Number(b.studentNumber) || 0));
+  const box = el('letterBox');
+  if (!list.length) { box.innerHTML = '<div class="muted">아직 제출된 레터가 없어요.</div>'; return; }
+  box.innerHTML = '';
+  list.forEach(l => {
+    const item = document.createElement('div');
+    item.className = 'letter-item';
+    const who = isSample(l) ? '예시' : `${l.className || ''} ${l.studentNumber || ''}번 ${l.studentName || ''}`;
+    item.innerHTML = `
+      <button class="letter-head" type="button">
+        <span class="letter-who">${escapeHtml(who)}</span>
+        <span class="letter-title">${escapeHtml(l.letterTitle || '(제목 없음)')}</span>
+        <span class="letter-arrow">＋</span>
+      </button>
+      <div class="letter-body hidden">${letterHtml(l)}</div>`;
+    const head = item.querySelector('.letter-head');
+    const body = item.querySelector('.letter-body');
+    const arrow = item.querySelector('.letter-arrow');
+    head.onclick = () => {
+      const closed = body.classList.toggle('hidden');
+      arrow.textContent = closed ? '＋' : '－';
+    };
+    box.appendChild(item);
+  });
+}
+function toggleAll(open) {
+  document.querySelectorAll('#letterBox .letter-item').forEach(item => {
+    item.querySelector('.letter-body').classList.toggle('hidden', !open);
+    item.querySelector('.letter-arrow').textContent = open ? '－' : '＋';
+  });
+}
+
+/* ───── 시작 ───── */
+try { if (sessionStorage.getItem(PW_KEY) === '1') enter(); else el('pw').focus(); } catch (e) { el('pw').focus(); }
+</script>
+</body>
+</html>
