@@ -26,6 +26,37 @@ button{font-family:inherit; cursor:pointer;}
 input,textarea,select{font-family:inherit;}
 .hidden{display:none !important;}
 
+/* ───── 로그인(대문) ───── */
+.login-wrap{max-width:420px; margin:0 auto; padding:60px 20px 40px;}
+.login-card{
+  background:var(--card); border:1px solid var(--line); border-radius:20px; padding:34px 26px 28px;
+  text-align:center; box-shadow:0 10px 28px rgba(150,120,90,.09);
+}
+.login-em{font-size:44px; display:block; margin-bottom:12px;}
+.login-card h2{font-size:24px; margin:0 0 6px; font-weight:800; color:var(--terracotta-deep);}
+.login-card .login-sub{font-size:13px; color:var(--sub); margin:0 0 20px;}
+.login-note{
+  background:var(--paper-deep); border-radius:13px; padding:14px 16px; margin-bottom:22px;
+  font-size:12.5px; color:var(--ink); line-height:1.75; text-align:left;
+}
+.login-btn{
+  width:100%; border:none; border-radius:14px; padding:15px; font-size:15.5px; font-weight:800; color:#fff;
+  background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep));
+  box-shadow:0 8px 20px rgba(180,100,70,.28); margin-top:6px;
+}
+
+/* ───── 로그인한 사람 표시 ───── */
+.who-row{display:flex; align-items:center; gap:8px; margin-top:11px;}
+.who-text{font-size:12.5px; font-weight:700; color:var(--sage-deep);}
+.logout-btn{
+  margin-left:auto; border:1px solid var(--line); background:#fff; color:var(--sub);
+  font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:9px;
+}
+.writer-line{
+  background:var(--paper-deep); border-radius:11px; padding:12px 14px; font-size:14px; font-weight:700;
+  color:var(--ink); margin-bottom:10px;
+}
+
 /* ───── 헤더 ───── */
 .topbar{
   position:sticky; top:0; z-index:20; background:rgba(253,250,243,.92); backdrop-filter:blur(6px);
@@ -211,7 +242,25 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
 <body>
 
 <!-- ───────── 갤러리 화면 ───────── -->
-<div id="screen-gallery">
+<!-- ───────── 로그인 (대문) ───────── -->
+<div id="screen-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <span class="login-em">✉️</span>
+      <h2>아트 레터</h2>
+      <p class="login-sub">우리가 조사한 미술 작품, 편지로 소개하기</p>
+      <div class="login-note">
+        학번과 이름을 넣고 들어와주세요.<br>
+        쓰던 레터와 매체 테스트 결과가 학번에 저장돼서, 다른 기기에서 들어와도 이어서 할 수 있어요.
+      </div>
+      <div class="field"><label>학번</label><input id="lg-sid" inputmode="numeric" placeholder="예: 20207" maxlength="6"></div>
+      <div class="field"><label>이름</label><input id="lg-name" placeholder="이름" maxlength="12"></div>
+      <button class="login-btn" onclick="doLogin()">들어가기</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-gallery" class="hidden">
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -221,6 +270,10 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
           <small>우리가 조사한 미술 작품, 편지로 소개하기</small>
         </div>
         <a class="nav-btn" href="test.html">🧭 내 매체 찾기</a>
+      </div>
+      <div class="who-row">
+        <span class="who-text" id="whoText"></span>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
       </div>
       <div class="filter-row" id="filterRow"></div>
     </div>
@@ -244,14 +297,10 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
     </div>
 
     <div class="field-group">
-      <h3>작성자 정보</h3>
-      <div class="field-row">
-        <div class="field"><label>반</label><input id="f-class" placeholder="예: 2-2" maxlength="10"></div>
-        <div class="field"><label>번호</label><input id="f-number" placeholder="예: 7" maxlength="4" inputmode="numeric"></div>
-        <div class="field"><label>이름</label><input id="f-name" placeholder="이름" maxlength="12"></div>
-      </div>
+      <h3>작성자</h3>
+      <div class="writer-line" id="writerLine"></div>
       <button type="button" class="load-draft-btn" onclick="loadDraft()">📥 저장된 내용 불러오기</button>
-      <div class="draft-hint">반·번호·이름을 입력한 뒤 눌러주세요. 다른 기기에서 쓰던 내용도 불러올 수 있어요.</div>
+      <div class="draft-hint">쓰던 내용은 자동으로 저장돼요. 다른 기기에서 쓰던 게 있으면 눌러서 가져올 수 있어요.</div>
     </div>
 
     <div class="field-group">
@@ -371,6 +420,49 @@ function stripTags(html) {
   return (d.textContent || '').trim();
 }
 
+/* ───── 로그인 (학번 + 이름) ───── */
+const LOGIN_KEY = 'artLetterLogin';
+let ME = null;
+
+// 20207 → 2학년 2반 7번. 4~6자리를 학년/반/번호로 나눈다.
+function parseSid(sid) {
+  const cut = { 4: [1, 1], 5: [1, 2], 6: [1, 2] }[sid.length];
+  if (!cut) return null;
+  const grade = sid.slice(0, cut[0]);
+  const cls = parseInt(sid.slice(cut[0], cut[0] + cut[1]), 10);
+  const num = parseInt(sid.slice(cut[0] + cut[1]), 10);
+  if (!cls || !num) return null;
+  return { className: `${grade}-${cls}`, studentNumber: String(num) };
+}
+function loadMe() {
+  try {
+    const m = JSON.parse(localStorage.getItem(LOGIN_KEY) || 'null');
+    return (m && m.sid && m.name && m.className) ? m : null;
+  } catch (e) { return null; }
+}
+function doLogin() {
+  const sid = el('lg-sid').value.trim();
+  const name = el('lg-name').value.trim();
+  if (!/^\d{4,6}$/.test(sid)) { toast('학번을 숫자로 입력해주세요'); return; }
+  const parsed = parseSid(sid);
+  if (!parsed) { toast('학번을 다시 확인해주세요'); return; }
+  if (name.length < 2) { toast('이름을 입력해주세요'); return; }
+  ME = { sid, name, className: parsed.className, studentNumber: parsed.studentNumber };
+  try { localStorage.setItem(LOGIN_KEY, JSON.stringify(ME)); } catch (e) {}
+  enterGallery();
+}
+function logout() {
+  if (!confirm('나갈까요? 쓰던 내용은 학번으로 다시 들어오면 그대로 있어요.')) return;
+  try { localStorage.removeItem(LOGIN_KEY); } catch (e) {}
+  location.reload();
+}
+function enterGallery() {
+  el('whoText').textContent = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
+  el('screen-login').classList.add('hidden');
+  el('screen-gallery').classList.remove('hidden');
+  startListening();
+}
+
 /* ───── 상태 ───── */
 let allLetters = [];
 let activeFilter = '전체';
@@ -466,11 +558,13 @@ function closeDetail() { el('modalOverlay').classList.add('hidden'); }
 
 /* ───── 화면 전환 ───── */
 function openWrite() {
+  el('writerLine').textContent = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
   el('screen-gallery').classList.add('hidden');
   el('screen-write').classList.remove('hidden');
   window.scrollTo(0, 0);
+  if (!hasDraftContent()) autoLoadDraft();   // 쓰다 만 게 있으면 알아서 이어서
 }
-const INPUT_IDS = ['f-class','f-number','f-name','f-artwork','f-artist','f-medium','f-title','kw-1','kw-2','kw-3','f-summary'];
+const INPUT_IDS = ['f-artwork','f-artist','f-medium','f-title','kw-1','kw-2','kw-3','f-summary'];
 function hasDraftContent() {
   if (RICH_IDS.some(id => el(id).textContent.trim())) return true;
   return INPUT_IDS.some(id => el(id).value.trim());
@@ -489,18 +583,8 @@ function resetForm() {
   syncKeywordLabels();
 }
 
-/* ───── 중간 저장 (반·번호·이름으로 식별) ───── */
-const IDENTITY_IDS = ['f-class', 'f-number', 'f-name'];
-const OTHER_INPUT_IDS = INPUT_IDS.filter(id => !IDENTITY_IDS.includes(id));
-function hasFormContentBeyondIdentity() {
-  if (RICH_IDS.some(id => el(id).textContent.trim())) return true;
-  return OTHER_INPUT_IDS.some(id => el(id).value.trim());
-}
-function draftKey() {
-  const c = el('f-class').value.trim(), n = el('f-number').value.trim(), nm = el('f-name').value.trim();
-  if (!c || !n || !nm) return null;
-  return `${c}__${n}__${nm}`.replace(/\//g, '_');
-}
+/* ───── 중간 저장 (학번으로 식별) ───── */
+function draftKey() { return ME ? ME.sid : null; }
 function wrapBareHrs(html) {
   return (html || '').replace(/<hr\s*\/?>/gi,
     '<div class="hr-wrap" contenteditable="false"><hr><button type="button" class="hr-del" title="구분선 삭제">✕</button></div>');
@@ -525,19 +609,22 @@ function applyDraftToForm(d) {
 }
 function loadDraft() {
   const key = draftKey();
-  if (!key) { toast('반·번호·이름을 먼저 입력해주세요'); return; }
-  if (hasFormContentBeyondIdentity() && !confirm('지금 작성 중인 내용을 저장된 내용으로 덮어쓸까요?')) return;
+  if (!key) return;
+  if (hasDraftContent() && !confirm('지금 작성 중인 내용을 저장된 내용으로 덮어쓸까요?')) return;
   draftsRef().doc(key).get().then(doc => {
     if (!doc.exists) { toast('저장된 내용이 없어요'); return; }
     applyDraftToForm(doc.data());
     toast('저장된 내용을 불러왔어요 📥');
   }).catch(e => { console.error(e); toast('불러오기에 실패했어요'); });
 }
-function checkDraftHint() {
+// 작성 화면을 열 때 쓰다 만 내용이 있으면 조용히 이어서 띄운다
+function autoLoadDraft() {
   const key = draftKey();
-  if (!key || hasFormContentBeyondIdentity()) return;
+  if (!key) return;
   draftsRef().doc(key).get().then(doc => {
-    if (doc.exists) toast('저장된 내용이 있어요! "불러오기"를 눌러보세요');
+    if (!doc.exists) return;
+    applyDraftToForm(doc.data());
+    toast('쓰다 만 내용을 이어서 불러왔어요 📥');
   }).catch(() => {});
 }
 function nowTimeLabel() {
@@ -554,9 +641,10 @@ function saveDraft() {
   const statusEl = el('draftStatus');
   if (!key) { statusEl.textContent = ''; return; }
   const data = {
-    className: el('f-class').value.trim(),
-    studentNumber: el('f-number').value.trim(),
-    studentName: el('f-name').value.trim(),
+    sid: ME.sid,
+    className: ME.className,
+    studentNumber: ME.studentNumber,
+    studentName: ME.name,
     artworkTitle: el('f-artwork').value.trim(),
     artistName: el('f-artist').value.trim(),
     medium: el('f-medium').value.trim(),
@@ -794,9 +882,8 @@ function collectRich(id) {
 
 /* ───── 제출 ───── */
 function submitLetter() {
-  const className = el('f-class').value.trim();
-  const studentNumber = el('f-number').value.trim();
-  const studentName = el('f-name').value.trim();
+  if (!ME) { toast('다시 들어와주세요'); return; }
+  const { sid, className, studentNumber, name: studentName } = ME;
   const artworkTitle = el('f-artwork').value.trim();
   const artistName = el('f-artist').value.trim();
   const medium = el('f-medium').value.trim();
@@ -808,7 +895,6 @@ function submitLetter() {
   const closingHtml = collectRich('editor-closing');
   const summaryText = el('f-summary').value.trim();
 
-  if (!className || !studentName) { toast('반과 이름을 입력해주세요'); return; }
   if (!artworkTitle) { toast('소개할 작품명을 입력해주세요'); return; }
   if (!letterTitle) { toast('레터 제목을 입력해주세요'); return; }
   if (!stripTags(introHtml)) { toast('1. 도입을 채워주세요'); return; }
@@ -828,7 +914,7 @@ function submitLetter() {
   clearTimeout(autoSaveTimer);
 
   lettersRef().add({
-    className, studentNumber, studentName,
+    sid, className, studentNumber, studentName,
     artworkTitle, artistName, medium,
     letterTitle, keywords,
     introHtml, artistHtml, detailHtmls, closingHtml, summaryText,
@@ -860,13 +946,16 @@ function syncKeywordLabels() {
 function initAutoSave() {
   INPUT_IDS.forEach(id => el(id).addEventListener('input', scheduleAutoSave));
   ['kw-1', 'kw-2', 'kw-3'].forEach(id => el(id).addEventListener('input', syncKeywordLabels));
-  el('f-name').addEventListener('blur', checkDraftHint);
 }
 
 initRichEditors();
 initAutoSave();
 syncKeywordLabels();
-startListening();
+
+/* 이미 들어온 적 있으면 로그인 건너뛰기 */
+ME = loadMe();
+if (ME) enterGallery();
+else el('lg-sid').focus();
 </script>
 </body>
 </html>

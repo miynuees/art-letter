@@ -83,6 +83,8 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
 .result-top{text-align:center; margin-bottom:8px;}
 .result-eyebrow{font-size:12.5px; font-weight:800; color:var(--sage-deep); letter-spacing:.5px;}
 .saved-note{font-size:12px; color:var(--sub); font-weight:600; margin-top:6px;}
+.who-row{max-width:680px; margin:0 auto; padding:10px 20px 0;}
+.who-text{font-size:12.5px; font-weight:700; color:var(--sage-deep);}
 .result-card{
   background:var(--card); border:1px solid var(--line); border-radius:20px; padding:30px 24px;
   text-align:center; box-shadow:0 10px 28px rgba(150,120,90,.1); margin:12px 0 30px;
@@ -147,11 +149,22 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
     </div>
     <a class="nav-btn" href="index.html">✉️ 아트 레터</a>
   </div>
+  <div class="who-row"><span class="who-text" id="whoText"></span></div>
 </div>
 
 <main>
+  <!-- 로그인 확인 -->
+  <section id="screen-gate" class="hidden">
+    <div class="intro-card">
+      <span class="intro-em">✉️</span>
+      <h2>아트 레터로<br>먼저 들어와주세요</h2>
+      <p>학번과 이름을 넣고 들어오면<br>테스트 결과가 학번에 저장돼요.<br>다른 기기에서 열어도 결과가 따라옵니다.</p>
+      <a class="big-btn" href="index.html" style="display:block; text-align:center; text-decoration:none; margin-top:24px;">아트 레터로 가기</a>
+    </div>
+  </section>
+
   <!-- 시작 -->
-  <section id="screen-intro">
+  <section id="screen-intro" class="hidden">
     <div class="intro-card">
       <span class="intro-em">🎨</span>
       <h2>물감과 붓으로<br>만들지 않은 작품들</h2>
@@ -206,6 +219,8 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
   </section>
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    여기부터 내용. 질문·매체·작가는 아래 두 덩어리만 고치면 됩니다.
@@ -406,6 +421,52 @@ const QUESTIONS = [
 
 const el = (id) => document.getElementById(id);
 const mediaById = (id) => MEDIA.find(m => m.id === id);
+
+/* ───── 아트 레터에서 로그인한 학번·이름 가져오기 ───── */
+let ME = null;
+function loadMe() {
+  try {
+    const m = JSON.parse(localStorage.getItem('artLetterLogin') || 'null');
+    return (m && m.sid && m.name && m.className) ? m : null;
+  } catch (e) { return null; }
+}
+
+/* ───── Firebase: 결과를 학번에 저장해 어느 기기에서든 따라오게 ───── */
+const firebaseConfig = {
+  apiKey: "AIzaSyBtSooSc-eg4zMHQ_QF-ErmYJmtaYT1Fkg",
+  authDomain: "limi-88231.firebaseapp.com",
+  projectId: "limi-88231",
+  storageBucket: "limi-88231.firebasestorage.app",
+  messagingSenderId: "361025367626",
+  appId: "1:361025367626:web:19d4e19d54558d4a79c0b3"
+};
+let db = null;
+try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); }
+catch (e) { console.error('Firebase 초기화 실패', e); }
+const resultsRef = () => db.collection('art_media_results');
+
+function saveResultToServer(media) {
+  if (!ME || !db) return;
+  resultsRef().doc(ME.sid).set({
+    sid: ME.sid, studentName: ME.name,
+    className: ME.className, studentNumber: ME.studentNumber,
+    mediaId: media.id, mediaName: media.name, mediaType: media.type,
+    picks: picks,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.error('결과 저장 실패', e));
+}
+function restoreFromServer() {
+  if (!ME || !db) return;
+  resultsRef().doc(ME.sid).get().then(doc => {
+    if (!doc.exists) return;
+    const saved = doc.data().picks;
+    if (!validPicks(saved)) return;
+    picks = saved;
+    step = QUESTIONS.length;
+    savePicks();          // 이 기기에도 남겨두기
+    showResult(true);
+  }).catch(() => {});
+}
 let step = 0;
 let picks = [];   // 각 질문에서 고른 선택지 번호
 
@@ -418,21 +479,21 @@ function savePicks() {
 function clearPicks() {
   try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
 }
+// 질문을 고친 뒤라면 예전 기록은 못 쓴다
+function validPicks(saved) {
+  return Array.isArray(saved)
+    && saved.length === QUESTIONS.length
+    && saved.every((v, i) => Number.isInteger(v) && v >= 0 && v < QUESTIONS[i].opts.length);
+}
 function loadPicks() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    const saved = JSON.parse(raw);
-    // 질문을 고친 뒤라면 예전 기록은 버린다
-    const valid = Array.isArray(saved)
-      && saved.length === QUESTIONS.length
-      && saved.every((v, i) => Number.isInteger(v) && v >= 0 && v < QUESTIONS[i].opts.length);
-    return valid ? saved : null;
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    return validPicks(saved) ? saved : null;
   } catch (e) { return null; }
 }
 
 function show(name) {
-  ['intro', 'quiz', 'result'].forEach(s => el('screen-' + s).classList.toggle('hidden', s !== name));
+  ['gate', 'intro', 'quiz', 'result'].forEach(s => el('screen-' + s).classList.toggle('hidden', s !== name));
   window.scrollTo(0, 0);
 }
 function startTest() {
@@ -499,7 +560,7 @@ function artistRows(media) {
 
 function showResult(fromSaved) {
   const top = tally();
-  if (!fromSaved) savePicks();
+  if (!fromSaved) { savePicks(); saveResultToServer(top); }
   el('savedNote').classList.toggle('hidden', !fromSaved);
   el('progressFill').style.width = '100%';
   el('rEm').textContent = top.emoji;
@@ -541,13 +602,20 @@ function showResult(fromSaved) {
   show('result');
 }
 
-/* ───── 시작할 때: 저장된 결과가 있으면 결과 화면부터 ───── */
+/* ───── 시작할 때 ───── */
 (function init() {
+  ME = loadMe();
+  if (!ME) { show('gate'); return; }   // 아트 레터에서 들어오지 않았으면 안내
+  el('whoText').textContent = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
+  show('intro');
   const saved = loadPicks();
-  if (!saved) return;
-  picks = saved;
-  step = QUESTIONS.length;
-  showResult(true);
+  if (saved) {                          // 이 기기에 결과가 있으면 바로
+    picks = saved;
+    step = QUESTIONS.length;
+    showResult(true);
+  } else {
+    restoreFromServer();                // 없으면 다른 기기에서 한 기록을 찾아본다
+  }
 })();
 </script>
 </body>
