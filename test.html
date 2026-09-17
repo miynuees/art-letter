@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e8d7c3">
+<meta name="robots" content="noindex, nofollow">
+<title>내 매체 찾기 · 아트 레터</title>
+<style>
+:root{
+  --paper:#fdfaf3; --paper-deep:#f6ecd9; --terracotta:#c97b5a; --terracotta-deep:#b3644a;
+  --sage:#8fae8b; --sage-deep:#729471; --ink:#4a3f38; --sub:#9a8b7c;
+  --card:#fffefb; --line:#ece1cf;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(201,123,90,.07), transparent 40%),
+    radial-gradient(circle at 92% 85%, rgba(143,174,139,.09), transparent 45%),
+    var(--paper);
+  color:var(--ink); min-height:100vh;
+}
+button{font-family:inherit; cursor:pointer;}
+a{color:inherit;}
+.hidden{display:none !important;}
+
+.topbar{
+  position:sticky; top:0; z-index:20; background:rgba(253,250,243,.92); backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line); padding:16px 20px 12px;
+}
+.topbar-inner{max-width:680px; margin:0 auto; display:flex; align-items:center; gap:9px;}
+.brand-mark{font-size:22px;}
+.topbar h1{font-size:19px; margin:0; font-weight:800; letter-spacing:-.3px; color:var(--terracotta-deep);}
+.topbar small{display:block; font-size:12px; color:var(--sub); font-weight:500; margin-top:1px;}
+.nav-btn{
+  margin-left:auto; flex:none; border:1px solid var(--line); background:#fff; color:var(--sub);
+  font-size:12.5px; font-weight:700; padding:8px 13px; border-radius:11px; text-decoration:none; white-space:nowrap;
+}
+
+main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
+
+/* ───── 시작 화면 ───── */
+.intro-card{
+  background:var(--card); border:1px solid var(--line); border-radius:20px; padding:34px 26px;
+  text-align:center; box-shadow:0 8px 24px rgba(150,120,90,.07);
+}
+.intro-em{font-size:46px; display:block; margin-bottom:14px;}
+.intro-card h2{font-size:23px; margin:0 0 12px; font-weight:800; line-height:1.4;}
+.intro-card p{font-size:14.5px; color:var(--sub); line-height:1.8; margin:0 0 6px;}
+.intro-note{
+  background:var(--paper-deep); border-radius:13px; padding:14px 16px; margin:22px 0 24px;
+  font-size:13px; color:var(--ink); line-height:1.75; text-align:left;
+}
+.big-btn{
+  width:100%; border:none; border-radius:14px; padding:16px; font-size:15.5px; font-weight:800; color:#fff;
+  background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep));
+  box-shadow:0 8px 20px rgba(180,100,70,.28);
+}
+.ghost-btn{
+  width:100%; border:1px solid var(--line); background:#fff; color:var(--sub);
+  border-radius:14px; padding:14px; font-size:14px; font-weight:700; margin-top:10px;
+}
+
+/* ───── 질문 화면 ───── */
+.progress-wrap{margin-bottom:22px;}
+.progress-bar{height:7px; background:var(--paper-deep); border-radius:99px; overflow:hidden;}
+.progress-fill{height:100%; background:linear-gradient(90deg,var(--sage),var(--sage-deep)); transition:width .3s;}
+.progress-text{font-size:12px; color:var(--sub); font-weight:700; margin-top:8px;}
+.q-text{font-size:20px; font-weight:800; line-height:1.55; margin:0 0 20px;}
+.opt-btn{
+  display:block; width:100%; text-align:left; background:var(--card); border:1px solid var(--line);
+  border-radius:14px; padding:16px 18px; font-size:14.5px; font-weight:600; line-height:1.6;
+  color:var(--ink); margin-bottom:10px; transition:.14s;
+}
+.opt-btn:hover{border-color:var(--terracotta); background:#fffdf8; transform:translateY(-1px);}
+.back-link{
+  border:none; background:none; color:var(--sub); font-size:13px; font-weight:700; padding:8px 0; margin-top:6px;
+}
+
+/* ───── 결과 화면 ───── */
+.result-top{text-align:center; margin-bottom:8px;}
+.result-eyebrow{font-size:12.5px; font-weight:800; color:var(--sage-deep); letter-spacing:.5px;}
+.result-card{
+  background:var(--card); border:1px solid var(--line); border-radius:20px; padding:30px 24px;
+  text-align:center; box-shadow:0 10px 28px rgba(150,120,90,.1); margin:12px 0 30px;
+}
+.result-em{font-size:52px; display:block; margin-bottom:10px;}
+.result-type{font-size:25px; font-weight:800; margin:0 0 6px; line-height:1.35;}
+.result-media{
+  display:inline-block; background:var(--terracotta); color:#fff; font-size:13px; font-weight:800;
+  padding:6px 15px; border-radius:99px; margin-bottom:18px;
+}
+.result-desc{font-size:14.5px; line-height:1.85; color:var(--ink); text-align:left; margin:0 0 18px;}
+.result-ask{
+  background:var(--paper-deep); border-radius:13px; padding:14px 16px; text-align:left;
+  font-size:13.5px; line-height:1.7; color:var(--ink);
+}
+.result-ask b{color:var(--terracotta-deep);}
+
+.artist-label{font-size:12px; font-weight:800; color:var(--terracotta-deep); margin:22px 0 10px; text-align:left;}
+.artist-row{
+  display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--paper);
+  border:1px solid var(--line); border-radius:12px; margin-bottom:8px; text-decoration:none; text-align:left;
+}
+.artist-row:hover{background:#fffdf8; border-color:var(--terracotta);}
+.artist-name{font-size:14px; font-weight:800; flex:none;}
+.artist-work{font-size:12.5px; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.artist-go{margin-left:auto; font-size:12px; color:var(--terracotta); font-weight:800; flex:none;}
+
+.all-label{font-size:16px; font-weight:800; margin:0 0 6px;}
+.all-hint{font-size:13px; color:var(--sub); line-height:1.7; margin:0 0 16px;}
+.media-item{
+  background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:9px; overflow:hidden;
+}
+.media-item.is-top{border-color:var(--terracotta); background:#fdf4ea;}
+.media-head{
+  display:flex; align-items:center; gap:11px; width:100%; background:none; border:none;
+  padding:15px 16px; text-align:left;
+}
+.media-em{font-size:21px; flex:none;}
+.media-names{min-width:0;}
+.media-title{font-size:14.5px; font-weight:800; color:var(--ink);}
+.media-sub{font-size:12px; color:var(--sub); margin-top:2px;}
+.media-mark{
+  margin-left:auto; flex:none; background:var(--terracotta); color:#fff; font-size:10.5px; font-weight:800;
+  padding:3px 8px; border-radius:7px;
+}
+.media-arrow{margin-left:auto; flex:none; color:var(--sub); font-size:12px; font-weight:800;}
+.media-item.is-top .media-arrow{margin-left:8px;}
+.media-body{padding:0 16px 16px; border-top:1px dashed var(--line); margin-top:2px; padding-top:14px;}
+.media-body p{font-size:13.5px; line-height:1.8; color:var(--ink); margin:0 0 12px;}
+
+.footer-btns{margin-top:28px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brand-mark">🧭</span>
+    <div>
+      <h1>내 매체 찾기</h1>
+      <small>어떤 재료로 만드는 사람일까</small>
+    </div>
+    <a class="nav-btn" href="index.html">✉️ 아트 레터</a>
+  </div>
+</div>
+
+<main>
+  <!-- 시작 -->
+  <section id="screen-intro">
+    <div class="intro-card">
+      <span class="intro-em">🎨</span>
+      <h2>물감과 붓으로<br>만들지 않은 작품들</h2>
+      <p>침대, 실, 형광등, 쓰레기, 영상…<br>미술의 재료는 생각보다 훨씬 넓습니다.</p>
+      <div class="intro-note">
+        여덟 개의 질문에 답하면 나와 잘 맞는 매체를 한 가지 알려줘요.<br>
+        미술 지식은 필요 없어요. 평소 내 모습에 가까운 쪽을 고르면 됩니다.<br>
+        결과가 마음에 들지 않으면, 아래에 있는 다른 매체를 골라도 괜찮아요.
+      </div>
+      <button class="big-btn" onclick="startTest()">시작하기</button>
+    </div>
+  </section>
+
+  <!-- 질문 -->
+  <section id="screen-quiz" class="hidden">
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+    <h2 class="q-text" id="qText"></h2>
+    <div id="optBox"></div>
+    <button class="back-link" id="backBtn" onclick="goBack()">← 이전 질문</button>
+  </section>
+
+  <!-- 결과 -->
+  <section id="screen-result" class="hidden">
+    <div class="result-top"><span class="result-eyebrow">나와 가장 잘 맞는 매체</span></div>
+    <div class="result-card">
+      <span class="result-em" id="rEm"></span>
+      <h2 class="result-type" id="rType"></h2>
+      <span class="result-media" id="rMedia"></span>
+      <p class="result-desc" id="rDesc"></p>
+      <div class="result-ask" id="rAsk"></div>
+      <div class="artist-label">이런 작가들이 있어요 · 눌러서 작품 보기</div>
+      <div id="rArtists"></div>
+    </div>
+
+    <h3 class="all-label">다른 매체도 둘러보기</h3>
+    <p class="all-hint">
+      테스트 결과는 출발점일 뿐이에요. 열한 가지를 다 훑어보고, 더 궁금한 매체가 있으면 그걸로 정해도 됩니다.
+      눌러서 설명과 작가를 확인해보세요.
+    </p>
+    <div id="allMedia"></div>
+
+    <div class="footer-btns">
+      <a class="big-btn" href="index.html" style="display:block; text-align:center; text-decoration:none;">레터 쓰러 가기</a>
+      <button class="ghost-btn" onclick="restart()">다시 해보기</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   여기부터 내용. 질문·매체·작가는 아래 두 덩어리만 고치면 됩니다.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ───── 매체 11가지 ───── */
+const MEDIA = [
+  {
+    id: 'object', emoji: '🪑', name: '오브제 · 레디메이드', type: '물건을 그대로 두는 사람',
+    desc: '무언가를 새로 만드는 대신, 이미 세상에 있는 물건을 그대로 작품으로 가져옵니다. 변기, 자전거 바퀴, 털로 덮인 찻잔이 미술관에 놓이면서 "이것도 예술인가?"라는 질문이 시작됐어요.',
+    ask: '이 작가는 왜 <b>직접 만들지 않고</b> 있는 물건을 골랐을까?',
+    artists: [
+      { name: '마르셀 뒤샹', work: '샘 (1917) · 남성용 소변기' },
+      { name: '메레 오펜하임', work: '모피로 된 아침 식사 (1936) · 털 찻잔' },
+      { name: '만 레이', work: '선물 (1921) · 못 박힌 다리미' }
+    ]
+  },
+  {
+    id: 'collage', emoji: '✂️', name: '콜라주 · 아상블라주', type: '여러 개를 겹치는 사람',
+    desc: '종이, 사진, 천, 신문을 오려 붙이고 쌓아 올립니다. 원래 따로 있던 것들이 한 화면에서 만나면, 각각일 때는 없던 뜻이 생겨나요.',
+    ask: '겹쳐진 것들 중 <b>가장 안 어울리는 조합</b>은 무엇이고, 왜 넣었을까?',
+    artists: [
+      { name: '로버트 라우센버그', work: '모노그램 (1959) · 박제 염소' },
+      { name: '한나 회흐', work: '부엌칼로 잘라내다 (1919) · 포토몽타주' },
+      { name: '쿠르트 슈비터스', work: '메르츠바우 · 방 전체를 채운 조각' }
+    ]
+  },
+  {
+    id: 'install', emoji: '🚪', name: '설치', type: '공간을 통째로 쓰는 사람',
+    desc: '벽에 걸거나 받침대에 올리는 대신, 공간 전체를 작품으로 만듭니다. 관람객이 작품 안으로 걸어 들어가고, 들어간 사람까지 작품의 일부가 돼요.',
+    ask: '이 작품은 <b>사진으로 볼 때와 직접 들어갔을 때</b> 뭐가 다를까?',
+    artists: [
+      { name: '쿠사마 야요이', work: '무한 거울방 · 점과 거울의 방' },
+      { name: '서도호', work: '집 속의 집 · 천으로 지은 집' },
+      { name: '아니쉬 카푸어', work: '구름 문 (2006) · 시카고의 은색 콩' }
+    ]
+  },
+  {
+    id: 'video', emoji: '📺', name: '영상 · 미디어아트', type: '화면으로 말하는 사람',
+    desc: '캔버스 대신 브라운관과 화면을 씁니다. 그림은 멈춰 있지만 영상은 시간을 따라 흐르기 때문에, 보는 사람이 머무는 시간까지 작가가 설계해요.',
+    ask: '<b>몇 분짜리</b> 작품이고, 그 시간 동안 무엇이 달라질까?',
+    artists: [
+      { name: '백남준', work: '다다익선 · TV 부처' },
+      { name: '빌 비올라', work: '더 크로싱 · 느리게 흐르는 물과 불' },
+      { name: '이이남', work: '명화를 움직이게 만든 미디어 작업' }
+    ]
+  },
+  {
+    id: 'light', emoji: '💡', name: '빛 · 네온', type: '빛을 재료로 쓰는 사람',
+    desc: '물감이 아니라 빛 자체로 만듭니다. 형광등, 네온, 안개와 색빛을 써서, 손에 잡히지 않는 것을 작품으로 세워요.',
+    ask: '<b>불을 끄면</b> 이 작품에는 무엇이 남을까?',
+    artists: [
+      { name: '제임스 터렐', work: '빛으로 채운 방 · 원주 뮤지엄 산' },
+      { name: '댄 플래빈', work: '형광등만으로 만든 작품' },
+      { name: '올라퍼 엘리아슨', work: '날씨 프로젝트 (2003) · 실내에 뜬 해' }
+    ]
+  },
+  {
+    id: 'kinetic', emoji: '⚙️', name: '움직임 (키네틱)', type: '움직이게 만드는 사람',
+    desc: '작품이 스스로 움직입니다. 바람에 흔들리거나, 모터로 돌아가거나, 심지어 스스로 부서지기도 해요. 멈춰 있는 조각과는 보는 방식 자체가 달라집니다.',
+    ask: '<b>무엇의 힘으로</b> 움직일까? 바람, 전기, 사람?',
+    artists: [
+      { name: '알렉산더 칼더', work: '모빌 · 공중에서 균형 잡는 조각' },
+      { name: '장 팅겔리', work: '뉴욕에 대한 경의 (1960) · 스스로 부서진 기계' },
+      { name: '테오 얀센', work: '스트란드비스트 · 바람으로 걷는 해변 생물' }
+    ]
+  },
+  {
+    id: 'fiber', emoji: '🧵', name: '실 · 천 · 섬유', type: '실로 연결하는 사람',
+    desc: '옷을 만들던 재료로 작품을 만듭니다. 실 한 가닥은 약하지만 수만 가닥이 공간을 가로지르면, 눈에 보이지 않던 관계와 기억이 드러나요.',
+    ask: '이 재료가 <b>원래 쓰이던 곳</b>은 어디였을까?',
+    artists: [
+      { name: '시오타 치하루', work: '붉은 실로 가득 채운 공간' },
+      { name: '김수자', work: '보따리 · 바늘 여인' },
+      { name: '루이즈 부르주아', work: '마망 · 거미와 천으로 만든 작업' }
+    ]
+  },
+  {
+    id: 'land', emoji: '🌿', name: '자연물 · 대지미술', type: '밖에서 만드는 사람',
+    desc: '미술관을 나가 사막, 호수, 숲에서 만듭니다. 재료는 돌과 얼음과 나뭇잎이고, 대부분 시간이 지나면 무너지거나 녹아 사라져요.',
+    ask: '<b>사라질 걸 알면서</b> 왜 만들었을까?',
+    artists: [
+      { name: '로버트 스미슨', work: '나선형 방파제 (1970) · 호수 위의 돌 나선' },
+      { name: '앤디 골즈워시', work: '나뭇잎과 얼음으로 만든 작업' },
+      { name: '크리스토와 잔클로드', work: '건물과 섬을 천으로 포장한 작업' }
+    ]
+  },
+  {
+    id: 'body', emoji: '🤸', name: '신체 · 퍼포먼스', type: '몸으로 하는 사람',
+    desc: '작가의 몸이 곧 재료이자 붓입니다. 남는 물건이 없고 그 자리에 있던 시간만 남기 때문에, 대개 사진과 영상으로만 전해져요.',
+    ask: '이 작품에서 <b>남은 것</b>은 무엇일까?',
+    artists: [
+      { name: '마리나 아브라모비치', work: '예술가가 여기 있다 (2010) · 마주 앉기' },
+      { name: '이건용', work: '신체 드로잉 · 몸의 한계로 그리기' },
+      { name: '이브 클랭', work: '허공으로의 도약 (1960)' }
+    ]
+  },
+  {
+    id: 'daily', emoji: '🧺', name: '일상 사물 · 버려진 것', type: '버려진 걸 줍는 사람',
+    desc: '플라스틱 소쿠리, 쓰레기, 다 쓴 물건을 모아 거대한 작품으로 만듭니다. 흔해서 눈길도 안 주던 것이 수천 개 쌓이면 완전히 다르게 보여요.',
+    ask: '이 물건이 <b>엄청나게 많아지면</b> 무엇이 달라질까?',
+    artists: [
+      { name: '최정화', work: '플라스틱 소쿠리로 쌓은 탑과 꽃' },
+      { name: '클래스 올든버그', work: '거대해진 일상 물건 · 청계천 스프링' },
+      { name: '비크 무니즈', work: '쓰레기로 만든 초상 사진' }
+    ]
+  },
+  {
+    id: 'digital', emoji: '🖥️', name: '디지털 · AI · 데이터', type: '데이터로 그리는 사람',
+    desc: '물감도 물건도 없이, 숫자와 데이터로 만듭니다. 컴퓨터가 계산한 결과가 벽 전체를 채우고, 작가는 재료를 고르는 대신 규칙을 설계해요.',
+    ask: '작가가 직접 만든 부분과 <b>기계가 만든 부분</b>은 어디까지일까?',
+    artists: [
+      { name: '레픽 아나돌', work: '데이터로 만든 움직이는 벽' },
+      { name: '팀랩 (teamLab)', work: '관람객에 반응하는 디지털 공간' },
+      { name: '디스트릭트', work: 'WAVE · 코엑스 전광판의 파도' }
+    ]
+  }
+];
+
+/* ───── 질문 8개 ─────
+   score: 그 선택지를 골랐을 때 점수를 받는 매체들 (위 MEDIA의 id) */
+const QUESTIONS = [
+  {
+    q: '책상 서랍을 열면 제일 많은 것은?',
+    opts: [
+      { t: '언젠가 쓸 것 같아서 둔 잡동사니', score: { daily: 3, object: 1 } },
+      { t: '케이블, 충전기, 이어폰', score: { digital: 3, video: 1 } },
+      { t: '영수증, 티켓, 스티커 같은 종이', score: { collage: 3 } },
+      { t: '실, 끈, 고무줄, 테이프', score: { fiber: 3 } }
+    ]
+  },
+  {
+    q: '방을 정리하다 손이 멈추는 순간은?',
+    opts: [
+      { t: '못 버리겠는 물건이 나왔을 때', score: { daily: 3, object: 1 } },
+      { t: '가구 배치를 바꾸고 싶어질 때', score: { install: 3 } },
+      { t: '옛날 사진이나 영상이 나왔을 때', score: { video: 3 } },
+      { t: '창밖 날씨가 좋아 보일 때', score: { land: 3 } }
+    ]
+  },
+  {
+    q: '친구에게 무언가를 설명할 때 나는?',
+    opts: [
+      { t: '일단 종이에 그려서 보여준다', score: { collage: 2, install: 1 } },
+      { t: '폰에서 사진이나 영상을 찾아 보여준다', score: { video: 3, digital: 1 } },
+      { t: '직접 해 보인다, 몸으로', score: { body: 3, kinetic: 1 } },
+      { t: '주변 물건을 가져와 예로 든다', score: { object: 3, daily: 1 } }
+    ]
+  },
+  {
+    q: '조립 설명서가 딸린 물건을 받았다. 나는?',
+    opts: [
+      { t: '순서대로 차근차근 따라간다', score: { fiber: 3, kinetic: 1 } },
+      { t: '부품을 전부 펼쳐놓고 본다', score: { collage: 3 } },
+      { t: '설명서는 안 보고 일단 시작한다', score: { body: 2, land: 2 } },
+      { t: '다 만든 뒤에 뭘 더 붙일지 생각한다', score: { kinetic: 3, object: 1 } }
+    ]
+  },
+  {
+    q: '여행지에서 챙겨 오는 것은?',
+    opts: [
+      { t: '그 동네에서만 파는 물건', score: { object: 3 } },
+      { t: '돌, 나뭇잎, 조개껍데기', score: { land: 3, fiber: 1 } },
+      { t: '사진 수백 장', score: { digital: 2, video: 2 } },
+      { t: '엽서, 티켓, 지도', score: { collage: 3 } }
+    ]
+  },
+  {
+    q: '밤에 창밖을 볼 때 제일 눈이 가는 것은?',
+    opts: [
+      { t: '간판과 가로등 불빛', score: { light: 3, digital: 1 } },
+      { t: '움직이는 차와 사람들', score: { kinetic: 3, body: 1 } },
+      { t: '건물 사이의 빈 공간', score: { install: 3 } },
+      { t: '나무와 하늘', score: { land: 3 } }
+    ]
+  },
+  {
+    q: '내가 만든 것을 보여줬을 때 듣고 싶은 말은?',
+    opts: [
+      { t: '"이거 어떻게 만든 거야?"', score: { kinetic: 2, digital: 2 } },
+      { t: '"여기 들어가 봐도 돼?"', score: { install: 3, light: 2 } },
+      { t: '"이거 원래 뭐였어?"', score: { object: 3, daily: 2 } },
+      { t: '"나도 해보고 싶다"', score: { body: 3, fiber: 2 } }
+    ]
+  },
+  {
+    q: '전시가 끝나면 작품이 사라진다고 한다. 나는?',
+    opts: [
+      { t: '아깝다. 그래도 남아 있어야지', score: { collage: 2, daily: 2, fiber: 1 } },
+      { t: '사진으로 남으면 그걸로 충분하다', score: { body: 3, land: 2 } },
+      { t: '그때그때 새로 만들면 된다. 매번 달라도 좋다', score: { light: 3, install: 1 } },
+      { t: '데이터로 저장해두면 영원하다', score: { digital: 3, video: 1 } }
+    ]
+  }
+];
+
+/* ═══════════════ 여기부터는 동작 코드 ═══════════════ */
+
+const el = (id) => document.getElementById(id);
+const mediaById = (id) => MEDIA.find(m => m.id === id);
+let step = 0;
+let picks = [];   // 각 질문에서 고른 선택지 번호
+
+function show(name) {
+  ['intro', 'quiz', 'result'].forEach(s => el('screen-' + s).classList.toggle('hidden', s !== name));
+  window.scrollTo(0, 0);
+}
+function startTest() {
+  step = 0; picks = [];
+  show('quiz');
+  renderQuestion();
+}
+function renderQuestion() {
+  const q = QUESTIONS[step];
+  el('progressFill').style.width = (step / QUESTIONS.length * 100) + '%';
+  el('progressText').textContent = `${step + 1} / ${QUESTIONS.length}`;
+  el('qText').textContent = q.q;
+  const box = el('optBox');
+  box.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt.t;
+    btn.onclick = () => choose(i);
+    box.appendChild(btn);
+  });
+  el('backBtn').classList.toggle('hidden', step === 0);
+}
+function choose(i) {
+  picks[step] = i;
+  step++;
+  if (step < QUESTIONS.length) renderQuestion();
+  else showResult();
+}
+function goBack() {
+  if (step === 0) return;
+  step--;
+  renderQuestion();
+}
+function restart() { show('intro'); }
+
+/* ───── 점수 합산 ───── */
+function tally() {
+  const scores = {};
+  MEDIA.forEach(m => scores[m.id] = 0);
+  picks.forEach((pickIdx, qIdx) => {
+    const s = QUESTIONS[qIdx].opts[pickIdx].score;
+    Object.keys(s).forEach(id => { scores[id] = (scores[id] || 0) + s[id]; });
+  });
+  // 동점이면 MEDIA에 적힌 순서가 앞선 쪽
+  return MEDIA.slice().sort((a, b) => scores[b.id] - scores[a.id])[0];
+}
+
+/* ───── 작가 줄 (누르면 이미지 검색) ───── */
+function artistRows(media) {
+  return media.artists.map(a => {
+    const query = encodeURIComponent(a.name + ' ' + media.name.split(' · ')[0] + ' 작품');
+    return `<a class="artist-row" href="https://www.google.com/search?tbm=isch&q=${query}" target="_blank" rel="noopener">
+      <span class="artist-name">${a.name}</span>
+      <span class="artist-work">${a.work}</span>
+      <span class="artist-go">작품 보기 →</span>
+    </a>`;
+  }).join('');
+}
+
+function showResult() {
+  const top = tally();
+  el('progressFill').style.width = '100%';
+  el('rEm').textContent = top.emoji;
+  el('rType').textContent = top.type;
+  el('rMedia').textContent = top.name;
+  el('rDesc').textContent = top.desc;
+  el('rAsk').innerHTML = '레터를 쓸 때 이 질문부터 붙잡아보세요<br>' + top.ask;
+  el('rArtists').innerHTML = artistRows(top);
+
+  const box = el('allMedia');
+  box.innerHTML = '';
+  MEDIA.forEach(m => {
+    const isTop = m.id === top.id;
+    const item = document.createElement('div');
+    item.className = 'media-item' + (isTop ? ' is-top' : '');
+    item.innerHTML = `
+      <button class="media-head" type="button">
+        <span class="media-em">${m.emoji}</span>
+        <span class="media-names">
+          <span class="media-title">${m.name}</span>
+          <span class="media-sub">${m.type}</span>
+        </span>
+        ${isTop ? '<span class="media-mark">내 결과</span>' : ''}
+        <span class="media-arrow">＋</span>
+      </button>
+      <div class="media-body hidden">
+        <p>${m.desc}</p>
+        ${artistRows(m)}
+      </div>`;
+    const head = item.querySelector('.media-head');
+    const body = item.querySelector('.media-body');
+    const arrow = item.querySelector('.media-arrow');
+    head.onclick = () => {
+      const open = body.classList.toggle('hidden');
+      arrow.textContent = open ? '＋' : '－';
+    };
+    box.appendChild(item);
+  });
+  show('result');
+}
+</script>
+</body>
+</html>

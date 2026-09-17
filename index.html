@@ -36,6 +36,11 @@ input,textarea,select{font-family:inherit;}
 .brand-mark{font-size:22px;}
 .brand h1{font-size:19px; margin:0; font-weight:800; letter-spacing:-.3px; color:var(--terracotta-deep);}
 .brand small{display:block; font-size:12px; color:var(--sub); font-weight:500; margin-top:1px;}
+.nav-btn{
+  margin-left:auto; flex:none; border:1px solid var(--line); background:#fff; color:var(--sub);
+  font-size:12.5px; font-weight:700; padding:8px 13px; border-radius:11px; text-decoration:none; white-space:nowrap;
+}
+.nav-btn:hover{border-color:var(--terracotta); color:var(--terracotta-deep);}
 .filter-row{display:flex; gap:7px; overflow-x:auto; margin-top:13px; padding-bottom:2px;}
 .filter-chip{
   flex:0 0 auto; border:1px solid var(--line); background:#fff; color:var(--sub);
@@ -215,6 +220,7 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
           <h1>아트 레터</h1>
           <small>우리가 조사한 미술 작품, 편지로 소개하기</small>
         </div>
+        <a class="nav-btn" href="test.html">🧭 내 매체 찾기</a>
       </div>
       <div class="filter-row" id="filterRow"></div>
     </div>
