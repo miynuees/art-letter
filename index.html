@@ -46,10 +46,10 @@ input,textarea,select{font-family:inherit;}
 }
 
 /* ───── 로그인한 사람 표시 ───── */
-.who-row{display:flex; align-items:center; gap:8px; margin-top:11px;}
+.who-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:11px;}
 .who-text{font-size:12.5px; font-weight:700; color:var(--sage-deep);}
 .logout-btn{
-  margin-left:auto; border:1px solid var(--line); background:#fff; color:var(--sub);
+  border:1px solid var(--line); background:#fff; color:var(--sub);
   font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:9px;
 }
 .writer-line{
@@ -67,11 +67,18 @@ input,textarea,select{font-family:inherit;}
 .brand-mark{font-size:22px;}
 .brand h1{font-size:19px; margin:0; font-weight:800; letter-spacing:-.3px; color:var(--terracotta-deep);}
 .brand small{display:block; font-size:12px; color:var(--sub); font-weight:500; margin-top:1px;}
+.nav-group{margin-left:auto; display:flex; gap:6px; flex-wrap:wrap;}
 .nav-btn{
-  margin-left:auto; flex:none; border:1px solid var(--line); background:#fff; color:var(--sub);
+  flex:none; border:1px solid var(--line); background:#fff; color:var(--sub);
   font-size:12.5px; font-weight:700; padding:8px 13px; border-radius:11px; text-decoration:none; white-space:nowrap;
 }
 .nav-btn:hover{border-color:var(--terracotta); color:var(--terracotta-deep);}
+@media (max-width:430px){
+  /* 좁은 화면에서는 버튼들을 한 줄 아래로 내려서 잘리지 않게 */
+  .nav-group{margin-left:0; width:100%;}
+  .nav-btn{padding:7px 10px; font-size:11.5px;}
+  .logout-btn{margin-left:auto; padding:6px 9px;}
+}
 .filter-row{display:flex; gap:7px; overflow-x:auto; margin-top:13px; padding-bottom:2px;}
 .filter-chip{
   flex:0 0 auto; border:1px solid var(--line); background:#fff; color:var(--sub);
@@ -269,11 +276,14 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
           <h1>아트 레터</h1>
           <small>우리가 조사한 미술 작품, 편지로 소개하기</small>
         </div>
-        <a class="nav-btn" href="test.html">🧭 내 매체 찾기</a>
       </div>
       <div class="who-row">
         <span class="who-text" id="whoText"></span>
-        <button class="logout-btn" onclick="logout()">로그아웃</button>
+        <div class="nav-group">
+          <a class="nav-btn" href="test.html">🧭 매체 찾기</a>
+          <a class="nav-btn" href="teacher.html">🗂️ 선생님</a>
+          <button class="logout-btn" onclick="logout()">로그아웃</button>
+        </div>
       </div>
       <div class="filter-row" id="filterRow"></div>
     </div>
