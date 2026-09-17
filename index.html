@@ -44,31 +44,36 @@ input,textarea,select{font-family:inherit;}
 }
 .filter-chip.active{background:var(--terracotta); border-color:var(--terracotta); color:#fff;}
 
-/* ───── 갤러리 ───── */
-main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
-.gallery-grid{
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px;
+/* ───── 갤러리 (게시글 목록) ───── */
+main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
+.letter-list{
+  display:flex; flex-direction:column; background:var(--card); border:1px solid var(--line); border-radius:16px;
+  overflow:hidden; box-shadow:0 6px 18px rgba(150,120,90,.06);
 }
-.letter-card{
-  background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden;
-  text-align:left; padding:0; box-shadow:0 6px 18px rgba(150,120,90,.08); transition:.18s;
-  display:flex; flex-direction:column;
+.letter-row{
+  display:flex; flex-direction:column; gap:3px; padding:14px 18px; border:none; border-bottom:1px solid var(--line);
+  background:none; text-align:left; width:100%; transition:.12s;
 }
-.letter-card:hover{transform:translateY(-3px); box-shadow:0 12px 26px rgba(150,120,90,.15);}
-.card-thumb{
-  width:100%; aspect-ratio:4/3; object-fit:cover; background:linear-gradient(135deg,var(--paper-deep),#f0e4d0);
-  display:flex; align-items:center; justify-content:center; font-size:34px; color:#d8c6ac;
+.letter-row:last-child{border-bottom:none;}
+.letter-row:hover{background:var(--paper-deep);}
+.row-title{
+  display:flex; align-items:center; gap:7px; min-width:0;
+  font-size:14.5px; font-weight:700; color:var(--ink);
 }
-.card-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
-.card-body{padding:13px 15px 15px; display:flex; flex-direction:column; gap:6px; flex:1;}
-.card-title{font-size:15.5px; font-weight:800; line-height:1.35; color:var(--ink);}
-.card-artwork{font-size:12.5px; color:var(--terracotta-deep); font-weight:700;}
-.card-excerpt{font-size:12.5px; color:var(--sub); line-height:1.5; flex:1;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
-.card-kw{display:flex; gap:4px; flex-wrap:wrap;}
-.card-kw span{background:var(--paper-deep); color:var(--sage-deep); font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:10px;}
-.card-meta{font-size:11.5px; color:var(--sub); border-top:1px dashed var(--line); padding-top:8px; margin-top:2px;
-  display:flex; justify-content:space-between;}
+.row-title-text{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.row-meta{font-size:11.5px; color:var(--sub);}
+
+/* ───── 예시 레터 표시 ───── */
+.row-badge{
+  flex:0 0 auto; background:var(--terracotta); color:#fff; font-size:10.5px; font-weight:800;
+  padding:3px 8px; border-radius:7px; letter-spacing:.4px;
+}
+.letter-row-sample{background:#fdf4ea;}
+.letter-row-sample:hover{background:#faeadb;}
+.m-badge{
+  display:inline-block; background:var(--terracotta); color:#fff; font-size:10.5px; font-weight:800;
+  padding:3px 8px; border-radius:7px; letter-spacing:.4px; margin-right:7px; vertical-align:2px;
+}
 
 .empty-state{text-align:center; padding:70px 20px; color:var(--sub);}
 .empty-state .em{font-size:40px; display:block; margin-bottom:10px;}
@@ -100,6 +105,20 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
 .field textarea{resize:vertical; line-height:1.6;}
 .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--terracotta);}
 
+.load-draft-btn{
+  width:100%; margin-top:2px; padding:9px; border:1px dashed var(--sage-deep); background:#fff;
+  color:var(--sage-deep); font-weight:700; font-size:12.5px; border-radius:10px;
+}
+.draft-hint{font-size:11px; color:var(--sub); line-height:1.5; margin:7px 0 10px;}
+.draft-status{text-align:center; font-size:11.5px; color:var(--sub); margin:-2px 0 10px; min-height:14px;}
+
+/* ───── 키워드별 설명 블록 ───── */
+.kw-block{margin-bottom:18px;}
+.kw-head{display:flex; align-items:center; gap:8px; margin-bottom:7px;}
+.kw-num{background:var(--sage-deep); color:#fff; font-size:11px; font-weight:800; padding:3px 9px; border-radius:9px; flex:none;}
+.kw-name{font-size:14.5px; font-weight:800; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.kw-name.kw-empty{font-size:12px; font-weight:600; color:#c3b5a3;}
+
 /* ───── 에디터 ───── */
 .editor-toolbar{
   display:flex; gap:5px; flex-wrap:wrap; padding:8px; background:var(--paper-deep); border-radius:12px 12px 0 0;
@@ -116,6 +135,7 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
   font-size:15px; line-height:1.75; background:#fffefc; color:var(--ink); overflow-y:auto;
 }
 .rich-editor.rich-editor-tall{min-height:220px;}
+.rich-editor.rich-editor-mid{min-height:165px;}
 .rich-editor:focus{outline:none;}
 .rich-editor img{max-width:100%; border-radius:10px; display:block; margin:10px auto;}
 .rich-editor hr{border:none; border-top:2px dashed var(--line); margin:0;}
@@ -170,6 +190,9 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
 .m-kw{display:flex; gap:6px; flex-wrap:wrap; margin:14px 0 2px;}
 .m-kw span{background:var(--paper-deep); color:var(--sage-deep); font-size:12px; font-weight:700; padding:4px 12px; border-radius:12px;}
 .m-section-label{font-size:12px; font-weight:800; color:var(--terracotta-deep); margin:24px 0 8px;}
+.m-kw-head{display:flex; align-items:center; gap:8px; margin:22px 0 6px;}
+.m-kw-head b{background:var(--paper-deep); color:var(--sage-deep); font-size:11px; font-weight:800; padding:3px 9px; border-radius:9px; flex:none;}
+.m-kw-head i{font-style:normal; font-size:15.5px; font-weight:800; color:var(--ink);}
 .m-summary{background:var(--paper-deep); border-radius:12px; padding:14px 16px; font-size:14px; line-height:1.8; white-space:pre-line;}
 
 .toast{
@@ -178,10 +201,6 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
   transition:.25s;
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-
-@media(max-width:520px){
-  .gallery-grid{grid-template-columns:repeat(auto-fill, minmax(150px,1fr));}
-}
 </style>
 </head>
 <body>
@@ -201,7 +220,7 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
     </div>
   </div>
   <main>
-    <div class="gallery-grid" id="galleryGrid"></div>
+    <div class="letter-list" id="galleryGrid"></div>
     <div class="empty-state hidden" id="emptyState">
       <span class="em">📭</span>
       아직 도착한 레터가 없어요.<br>오른쪽 아래 버튼으로 첫 레터를 써보세요!
@@ -225,6 +244,8 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
         <div class="field"><label>번호</label><input id="f-number" placeholder="예: 7" maxlength="4" inputmode="numeric"></div>
         <div class="field"><label>이름</label><input id="f-name" placeholder="이름" maxlength="12"></div>
       </div>
+      <button type="button" class="load-draft-btn" onclick="loadDraft()">📥 저장된 내용 불러오기</button>
+      <div class="draft-hint">반·번호·이름을 입력한 뒤 눌러주세요. 다른 기기에서 쓰던 내용도 불러올 수 있어요.</div>
     </div>
 
     <div class="field-group">
@@ -248,25 +269,36 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
     </div>
 
     <div class="field-group">
-      <h3>2. 핵심 키워드 3개</h3>
-      <div class="section-hint">이 작품을 이해하는 데 필요한 핵심 키워드 3개를 먼저 짧게 적어주세요.</div>
-      <div class="field-row">
-        <div class="field"><input id="kw-1" placeholder="키워드 1" maxlength="20"></div>
-        <div class="field"><input id="kw-2" placeholder="키워드 2" maxlength="20"></div>
-        <div class="field"><input id="kw-3" placeholder="키워드 3" maxlength="20"></div>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <h3>3. 작가 이야기</h3>
+      <h3>2. 작가 이야기</h3>
       <div class="section-hint">작가가 누구인지, 이 작품을 만들게 된 배경을 소개해주세요.</div>
       <div class="field" style="position:relative;" id="richwrap-artist"></div>
     </div>
 
     <div class="field-group">
+      <h3>3. 핵심 키워드 3개</h3>
+      <div class="section-hint">이 작품을 이해하는 데 필요한 핵심 키워드를 짧게 적어주세요. 자세한 설명은 바로 아래 4번에서 키워드마다 한 칸씩 쓰게 돼요.</div>
+      <div class="field-row">
+        <div class="field"><label>키워드 1</label><input id="kw-1" placeholder="예: 오브제" maxlength="20"></div>
+        <div class="field"><label>키워드 2</label><input id="kw-2" placeholder="예: 반복" maxlength="20"></div>
+        <div class="field"><label>키워드 3</label><input id="kw-3" placeholder="예: 그림자" maxlength="20"></div>
+      </div>
+    </div>
+
+    <div class="field-group">
       <h3>4. 자세히 들여다보기</h3>
-      <div class="section-hint">위 키워드를 하나씩 짚어가며, 재료·기법이나 조사하며 알게 된 흥미로운 사실을 친절하게 설명해주세요.</div>
-      <div class="field" style="position:relative;" id="richwrap-detail"></div>
+      <div class="section-hint">위에 적은 키워드를 한 칸씩 설명해주세요. 재료·기법이나 조사하며 알게 된 사실을 함께 넣으면 좋아요.</div>
+      <div class="kw-block">
+        <div class="kw-head"><span class="kw-num">키워드 1</span><span class="kw-name kw-empty" id="kw-label-1">위 3번에 키워드를 먼저 적어주세요</span></div>
+        <div class="field" style="position:relative;" id="richwrap-detail-1"></div>
+      </div>
+      <div class="kw-block">
+        <div class="kw-head"><span class="kw-num">키워드 2</span><span class="kw-name kw-empty" id="kw-label-2">위 3번에 키워드를 먼저 적어주세요</span></div>
+        <div class="field" style="position:relative;" id="richwrap-detail-2"></div>
+      </div>
+      <div class="kw-block">
+        <div class="kw-head"><span class="kw-num">키워드 3</span><span class="kw-name kw-empty" id="kw-label-3">위 3번에 키워드를 먼저 적어주세요</span></div>
+        <div class="field" style="position:relative;" id="richwrap-detail-3"></div>
+      </div>
     </div>
 
     <div class="field-group">
@@ -282,6 +314,7 @@ main{max-width:980px; margin:0 auto; padding:22px 20px 100px;}
     </div>
 
     <input type="file" accept="image/*" class="file-input" id="imgFileInput" onchange="handleImageFile(event)">
+    <div id="draftStatus" class="draft-status"></div>
     <button class="submit-btn" id="submitBtn" onclick="submitLetter()">레터 보내기 💌</button>
   </div>
 </div>
@@ -316,6 +349,7 @@ let db = null;
 try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); }
 catch (e) { console.error('Firebase 초기화 실패', e); }
 const lettersRef = () => db.collection('art_letters');
+const draftsRef = () => db.collection('art_letter_drafts');
 
 /* ───── helpers ───── */
 const el = (id) => document.getElementById(id);
@@ -361,16 +395,14 @@ function renderFilters() {
   });
 }
 
-function letterThumb(letter) {
-  for (const key of ['introHtml', 'artistHtml', 'detailHtml', 'closingHtml']) {
-    const m = (letter[key] || '').match(/<img[^>]*src="([^"]+)"/);
-    if (m) return m[1];
-  }
-  return null;
+// 선생님이 올린 예시 레터인지 (isSample 표시 또는 반 이름이 '예시')
+function isSampleLetter(letter) {
+  return !!letter.isSample || letter.className === '예시';
 }
-function letterExcerpt(letter) {
-  const t = stripTags(letter.introHtml) || stripTags(letter.artistHtml) || stripTags(letter.detailHtml) || '';
-  return t.slice(0, 70);
+
+function letterDateLabel(letter) {
+  const d = letter.createdAt && letter.createdAt.toDate ? letter.createdAt.toDate() : null;
+  return d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : '';
 }
 
 function renderGallery() {
@@ -379,39 +411,45 @@ function renderGallery() {
   grid.innerHTML = '';
   el('emptyState').classList.toggle('hidden', list.length > 0);
   list.forEach(letter => {
-    const thumb = letterThumb(letter);
-    const excerpt = letterExcerpt(letter);
-    const kw = (letter.keywords || []).slice(0, 3);
-    const card = document.createElement('button');
-    card.className = 'letter-card';
-    card.onclick = () => openDetail(letter);
-    card.innerHTML = `
-      <div class="card-thumb">${thumb ? `<img src="${thumb}" alt="">` : '🎨'}</div>
-      <div class="card-body">
-        <div class="card-title">${escapeHtml(letter.letterTitle || '(제목 없음)')}</div>
-        <div class="card-artwork">${escapeHtml(letter.artworkTitle || '')}${letter.artistName ? ' · ' + escapeHtml(letter.artistName) : ''}</div>
-        ${kw.length ? `<div class="card-kw">${kw.map(k => `<span>${escapeHtml(k)}</span>`).join('')}</div>` : ''}
-        <div class="card-excerpt">${escapeHtml(excerpt)}</div>
-        <div class="card-meta"><span>${escapeHtml(letter.className || '')} ${escapeHtml(letter.studentName || '')}</span></div>
-      </div>`;
-    grid.appendChild(card);
+    const meta = [letter.className, letter.studentName, letterDateLabel(letter)].filter(Boolean).join(' · ');
+    const row = document.createElement('button');
+    row.className = 'letter-row' + (isSampleLetter(letter) ? ' letter-row-sample' : '');
+    row.onclick = () => openDetail(letter);
+    const badge = isSampleLetter(letter) ? '<span class="row-badge">예시</span>' : '';
+    row.innerHTML = `
+      <div class="row-title">${badge}<span class="row-title-text">${escapeHtml(letter.letterTitle || '(제목 없음)')}</span></div>
+      <div class="row-meta">${escapeHtml(meta)}</div>`;
+    grid.appendChild(row);
   });
 }
 
 /* ───── 상세보기 ───── */
 function openDetail(letter) {
-  el('m-eyebrow').textContent = `${letter.className || ''} ${letter.studentNumber || ''}번 ${letter.studentName || ''}`.trim();
+  const eyebrow = `${letter.className || ''} ${letter.studentNumber || ''}번 ${letter.studentName || ''}`.trim();
+  el('m-eyebrow').innerHTML = (isSampleLetter(letter) ? '<span class="m-badge">예시</span>' : '') + escapeHtml(eyebrow);
   el('m-title').textContent = letter.letterTitle || '(제목 없음)';
   el('m-artwork').textContent = [letter.artworkTitle, letter.artistName, letter.medium].filter(Boolean).join(' · ');
-  const d = letter.createdAt && letter.createdAt.toDate ? letter.createdAt.toDate() : null;
-  el('m-meta').textContent = d ? `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} 작성` : '';
+  const dateLabel = letterDateLabel(letter);
+  el('m-meta').textContent = dateLabel ? dateLabel + ' 작성' : '';
 
-  const kwHtml = (letter.keywords || []).length
-    ? `<div class="m-kw">${letter.keywords.map(k => `<span>${escapeHtml(k)}</span>`).join('')}</div>` : '';
+  const kws = letter.keywords || [];
+  const kwHtml = kws.length
+    ? `<div class="m-kw">${kws.map(k => `<span>${escapeHtml(k)}</span>`).join('')}</div>` : '';
   let html = (letter.introHtml || '') + kwHtml;
-  [['artistHtml', '작가 이야기'], ['detailHtml', '자세히 들여다보기'], ['closingHtml', '마무리']].forEach(([key, label]) => {
-    if (letter[key]) html += `<div class="m-section-label">${label}</div>${letter[key]}`;
-  });
+  if (letter.artistHtml) html += `<div class="m-section-label">작가 이야기</div>${letter.artistHtml}`;
+
+  // 키워드별 설명 (예전 레터는 detailHtml 한 덩어리로 저장돼 있음)
+  const perKeyword = !!letter.detailHtmls;
+  const details = letter.detailHtmls || (letter.detailHtml ? [letter.detailHtml] : []);
+  if (details.some(h => h)) {
+    html += `<div class="m-section-label">자세히 들여다보기</div>`;
+    details.forEach((h, i) => {
+      if (!h) return;
+      if (perKeyword && kws[i]) html += `<div class="m-kw-head"><b>키워드 ${i + 1}</b><i>${escapeHtml(kws[i])}</i></div>`;
+      html += h;
+    });
+  }
+  if (letter.closingHtml) html += `<div class="m-section-label">마무리</div>${letter.closingHtml}`;
   if (letter.summaryText) {
     html += `<div class="m-section-label">오늘의 레터 요약</div><div class="m-summary">${escapeHtml(letter.summaryText)}</div>`;
   }
@@ -440,6 +478,95 @@ function closeWrite() {
 function resetForm() {
   INPUT_IDS.forEach(id => el(id).value = '');
   RICH_IDS.forEach(id => { el(id).innerHTML = ''; savedRanges.delete(id); });
+  clearTimeout(autoSaveTimer);
+  el('draftStatus').textContent = '';
+  syncKeywordLabels();
+}
+
+/* ───── 중간 저장 (반·번호·이름으로 식별) ───── */
+const IDENTITY_IDS = ['f-class', 'f-number', 'f-name'];
+const OTHER_INPUT_IDS = INPUT_IDS.filter(id => !IDENTITY_IDS.includes(id));
+function hasFormContentBeyondIdentity() {
+  if (RICH_IDS.some(id => el(id).textContent.trim())) return true;
+  return OTHER_INPUT_IDS.some(id => el(id).value.trim());
+}
+function draftKey() {
+  const c = el('f-class').value.trim(), n = el('f-number').value.trim(), nm = el('f-name').value.trim();
+  if (!c || !n || !nm) return null;
+  return `${c}__${n}__${nm}`.replace(/\//g, '_');
+}
+function wrapBareHrs(html) {
+  return (html || '').replace(/<hr\s*\/?>/gi,
+    '<div class="hr-wrap" contenteditable="false"><hr><button type="button" class="hr-del" title="구분선 삭제">✕</button></div>');
+}
+function applyDraftToForm(d) {
+  el('f-artwork').value = d.artworkTitle || '';
+  el('f-artist').value = d.artistName || '';
+  el('f-medium').value = d.medium || '';
+  el('f-title').value = d.letterTitle || '';
+  const kw = d.keywords || [];
+  el('kw-1').value = kw[0] || ''; el('kw-2').value = kw[1] || ''; el('kw-3').value = kw[2] || '';
+  el('f-summary').value = d.summaryText || '';
+  el('editor-intro').innerHTML = wrapBareHrs(d.introHtml);
+  el('editor-artist').innerHTML = wrapBareHrs(d.artistHtml);
+  const dh = d.detailHtmls || [d.detailHtml || '', '', '']; // 예전에 한 칸으로 저장된 내용도 불러오기
+  el('editor-detail-1').innerHTML = wrapBareHrs(dh[0]);
+  el('editor-detail-2').innerHTML = wrapBareHrs(dh[1]);
+  el('editor-detail-3').innerHTML = wrapBareHrs(dh[2]);
+  el('editor-closing').innerHTML = wrapBareHrs(d.closingHtml);
+  RICH_IDS.forEach(id => savedRanges.delete(id));
+  syncKeywordLabels();
+}
+function loadDraft() {
+  const key = draftKey();
+  if (!key) { toast('반·번호·이름을 먼저 입력해주세요'); return; }
+  if (hasFormContentBeyondIdentity() && !confirm('지금 작성 중인 내용을 저장된 내용으로 덮어쓸까요?')) return;
+  draftsRef().doc(key).get().then(doc => {
+    if (!doc.exists) { toast('저장된 내용이 없어요'); return; }
+    applyDraftToForm(doc.data());
+    toast('저장된 내용을 불러왔어요 📥');
+  }).catch(e => { console.error(e); toast('불러오기에 실패했어요'); });
+}
+function checkDraftHint() {
+  const key = draftKey();
+  if (!key || hasFormContentBeyondIdentity()) return;
+  draftsRef().doc(key).get().then(doc => {
+    if (doc.exists) toast('저장된 내용이 있어요! "불러오기"를 눌러보세요');
+  }).catch(() => {});
+}
+function nowTimeLabel() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(saveDraft, 1500);
+}
+function saveDraft() {
+  const key = draftKey();
+  const statusEl = el('draftStatus');
+  if (!key) { statusEl.textContent = ''; return; }
+  const data = {
+    className: el('f-class').value.trim(),
+    studentNumber: el('f-number').value.trim(),
+    studentName: el('f-name').value.trim(),
+    artworkTitle: el('f-artwork').value.trim(),
+    artistName: el('f-artist').value.trim(),
+    medium: el('f-medium').value.trim(),
+    letterTitle: el('f-title').value.trim(),
+    keywords: [el('kw-1').value.trim(), el('kw-2').value.trim(), el('kw-3').value.trim()].filter(Boolean),
+    introHtml: collectRich('editor-intro'),
+    artistHtml: collectRich('editor-artist'),
+    detailHtmls: [collectRich('editor-detail-1'), collectRich('editor-detail-2'), collectRich('editor-detail-3')],
+    closingHtml: collectRich('editor-closing'),
+    summaryText: el('f-summary').value.trim(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  statusEl.textContent = '저장 중...';
+  draftsRef().doc(key).set(data)
+    .then(() => { statusEl.textContent = '임시저장됨 · ' + nowTimeLabel(); })
+    .catch(e => { console.error(e); statusEl.textContent = '임시저장 실패'; });
 }
 
 /* ───── 에디터: 선택영역 저장/복원 (에디터별로 따로 관리) ───── */
@@ -565,7 +692,7 @@ function compressImage(file, cb) {
 }
 
 /* ───── 리치 에디터 생성 ───── */
-const RICH_IDS = ['editor-intro', 'editor-artist', 'editor-detail', 'editor-closing'];
+const RICH_IDS = ['editor-intro', 'editor-artist', 'editor-detail-1', 'editor-detail-2', 'editor-detail-3', 'editor-closing'];
 function toolbarTemplate(id) {
   return `
     <div class="editor-toolbar">
@@ -587,7 +714,7 @@ function bindRichEditor(id) {
   const save = () => saveSelectionFor(id);
   ed.addEventListener('keyup', save);
   ed.addEventListener('mouseup', save);
-  ed.addEventListener('input', save);
+  ed.addEventListener('input', () => { save(); scheduleAutoSave(); });
   ed.addEventListener('click', (e) => {
     if (e.target.classList.contains('hr-del')) {
       e.target.closest('.hr-wrap').remove();
@@ -595,17 +722,22 @@ function bindRichEditor(id) {
     }
   });
 }
+// 키워드 3칸 모두 같은 안내문을 씁니다. 여기만 고치면 세 칸에 다 반영돼요.
+const KW_PLACEHOLDER = '이 키워드가 작품에서 어떻게 나타나는지, 재료·기법이나 조사하며 알게 된 사실과 함께 설명해보세요.';
+
 function initRichEditors() {
   const configs = [
     { id: 'editor-intro', wrap: 'richwrap-intro', placeholder: '예: 이런 그림을 그림이라고 부를 수 있을까? 오늘은 ○○○의 <작품명>을 소개해볼게.' },
     { id: 'editor-artist', wrap: 'richwrap-artist', placeholder: '작가가 누구인지, 이 작품을 만들게 된 계기나 배경을 적어보세요.' },
-    { id: 'editor-detail', wrap: 'richwrap-detail', placeholder: '키워드를 하나씩 짚어가며 재료·기법, 조사하며 알게 된 사실을 설명해보세요.', tall: true },
+    { id: 'editor-detail-1', wrap: 'richwrap-detail-1', placeholder: KW_PLACEHOLDER, mid: true },
+    { id: 'editor-detail-2', wrap: 'richwrap-detail-2', placeholder: KW_PLACEHOLDER, mid: true },
+    { id: 'editor-detail-3', wrap: 'richwrap-detail-3', placeholder: KW_PLACEHOLDER, mid: true },
     { id: 'editor-closing', wrap: 'richwrap-closing', placeholder: '이 작품이 특별한 이유, 나에게 남은 느낌을 적으며 마무리해보세요.' }
   ];
   configs.forEach(cfg => {
     el(cfg.wrap).innerHTML =
       toolbarTemplate(cfg.id) +
-      `<div id="${cfg.id}" class="rich-editor${cfg.tall ? ' rich-editor-tall' : ''}" contenteditable="true" data-placeholder="${escapeHtml(cfg.placeholder)}"></div>` +
+      `<div id="${cfg.id}" class="rich-editor${cfg.tall ? ' rich-editor-tall' : ''}${cfg.mid ? ' rich-editor-mid' : ''}" contenteditable="true" data-placeholder="${escapeHtml(cfg.placeholder)}"></div>` +
       `<div id="${cfg.id}-emojiPop" class="emoji-pop hidden"></div>`;
     bindRichEditor(cfg.id);
   });
@@ -666,7 +798,7 @@ function submitLetter() {
   const keywords = [el('kw-1').value.trim(), el('kw-2').value.trim(), el('kw-3').value.trim()].filter(Boolean);
   const introHtml = collectRich('editor-intro');
   const artistHtml = collectRich('editor-artist');
-  const detailHtml = collectRich('editor-detail');
+  const detailHtmls = [collectRich('editor-detail-1'), collectRich('editor-detail-2'), collectRich('editor-detail-3')];
   const closingHtml = collectRich('editor-closing');
   const summaryText = el('f-summary').value.trim();
 
@@ -674,25 +806,29 @@ function submitLetter() {
   if (!artworkTitle) { toast('소개할 작품명을 입력해주세요'); return; }
   if (!letterTitle) { toast('레터 제목을 입력해주세요'); return; }
   if (!stripTags(introHtml)) { toast('1. 도입을 채워주세요'); return; }
-  if (keywords.length < 3) { toast('2. 키워드 3개를 모두 입력해주세요'); return; }
-  if (!stripTags(artistHtml)) { toast('3. 작가 이야기를 채워주세요'); return; }
-  if (!stripTags(detailHtml)) { toast('4. 자세히 들여다보기를 채워주세요'); return; }
+  if (!stripTags(artistHtml)) { toast('2. 작가 이야기를 채워주세요'); return; }
+  if (keywords.length < 3) { toast('3. 키워드 3개를 모두 입력해주세요'); return; }
+  const emptyIdx = detailHtmls.findIndex(h => !stripTags(h));
+  if (emptyIdx >= 0) { toast(`4. '${keywords[emptyIdx]}' 설명을 채워주세요`); return; }
   if (!stripTags(closingHtml)) { toast('5. 마무리를 채워주세요'); return; }
   if (!summaryText) { toast('6. 요약을 채워주세요'); return; }
 
-  const totalLen = introHtml.length + artistHtml.length + detailHtml.length + closingHtml.length;
+  const totalLen = introHtml.length + artistHtml.length + detailHtmls.join('').length + closingHtml.length;
   if (totalLen > 900000) { toast('내용이 너무 커요. 이미지 개수를 줄여주세요'); return; }
 
   const btn = el('submitBtn');
   btn.disabled = true; btn.textContent = '보내는 중...';
+  const pendingDraftKey = draftKey();
+  clearTimeout(autoSaveTimer);
 
   lettersRef().add({
     className, studentNumber, studentName,
     artworkTitle, artistName, medium,
     letterTitle, keywords,
-    introHtml, artistHtml, detailHtml, closingHtml, summaryText,
+    introHtml, artistHtml, detailHtmls, closingHtml, summaryText,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
+    if (pendingDraftKey) draftsRef().doc(pendingDraftKey).delete().catch(() => {});
     toast('레터를 보냈어요 💌');
     resetForm();
     el('screen-write').classList.add('hidden');
@@ -705,7 +841,25 @@ function submitLetter() {
   });
 }
 
+/* ───── 키워드 → 4번 섹션 소제목 동기화 ───── */
+function syncKeywordLabels() {
+  [1, 2, 3].forEach(i => {
+    const name = el('kw-' + i).value.trim();
+    const label = el('kw-label-' + i);
+    label.textContent = name || '위 3번에 키워드를 먼저 적어주세요';
+    label.classList.toggle('kw-empty', !name);
+  });
+}
+
+function initAutoSave() {
+  INPUT_IDS.forEach(id => el(id).addEventListener('input', scheduleAutoSave));
+  ['kw-1', 'kw-2', 'kw-3'].forEach(id => el(id).addEventListener('input', syncKeywordLabels));
+  el('f-name').addEventListener('blur', checkDraftHint);
+}
+
 initRichEditors();
+initAutoSave();
+syncKeywordLabels();
 startListening();
 </script>
 </body>
