@@ -82,6 +82,7 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
 /* ───── 결과 화면 ───── */
 .result-top{text-align:center; margin-bottom:8px;}
 .result-eyebrow{font-size:12.5px; font-weight:800; color:var(--sage-deep); letter-spacing:.5px;}
+.saved-note{font-size:12px; color:var(--sub); font-weight:600; margin-top:6px;}
 .result-card{
   background:var(--card); border:1px solid var(--line); border-radius:20px; padding:30px 24px;
   text-align:center; box-shadow:0 10px 28px rgba(150,120,90,.1); margin:12px 0 30px;
@@ -177,7 +178,10 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
 
   <!-- 결과 -->
   <section id="screen-result" class="hidden">
-    <div class="result-top"><span class="result-eyebrow">나와 가장 잘 맞는 매체</span></div>
+    <div class="result-top">
+      <span class="result-eyebrow">나와 가장 잘 맞는 매체</span>
+      <div class="saved-note hidden" id="savedNote">지난번에 했던 결과예요</div>
+    </div>
     <div class="result-card">
       <span class="result-em" id="rEm"></span>
       <h2 class="result-type" id="rType"></h2>
@@ -405,6 +409,28 @@ const mediaById = (id) => MEDIA.find(m => m.id === id);
 let step = 0;
 let picks = [];   // 각 질문에서 고른 선택지 번호
 
+/* ───── 결과를 이 브라우저에 저장 (다시 들어와도 결과가 보이게) ─────
+   시크릿 모드나 저장이 막힌 환경에서도 그냥 처음부터 하면 되도록 try로 감쌈 */
+const SAVE_KEY = 'artMediaTest.picks';
+function savePicks() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(picks)); } catch (e) {}
+}
+function clearPicks() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+}
+function loadPicks() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    // 질문을 고친 뒤라면 예전 기록은 버린다
+    const valid = Array.isArray(saved)
+      && saved.length === QUESTIONS.length
+      && saved.every((v, i) => Number.isInteger(v) && v >= 0 && v < QUESTIONS[i].opts.length);
+    return valid ? saved : null;
+  } catch (e) { return null; }
+}
+
 function show(name) {
   ['intro', 'quiz', 'result'].forEach(s => el('screen-' + s).classList.toggle('hidden', s !== name));
   window.scrollTo(0, 0);
@@ -441,7 +467,11 @@ function goBack() {
   step--;
   renderQuestion();
 }
-function restart() { show('intro'); }
+function restart() {
+  clearPicks();
+  step = 0; picks = [];
+  show('intro');
+}
 
 /* ───── 점수 합산 ───── */
 function tally() {
@@ -467,8 +497,10 @@ function artistRows(media) {
   }).join('');
 }
 
-function showResult() {
+function showResult(fromSaved) {
   const top = tally();
+  if (!fromSaved) savePicks();
+  el('savedNote').classList.toggle('hidden', !fromSaved);
   el('progressFill').style.width = '100%';
   el('rEm').textContent = top.emoji;
   el('rType').textContent = top.type;
@@ -508,6 +540,15 @@ function showResult() {
   });
   show('result');
 }
+
+/* ───── 시작할 때: 저장된 결과가 있으면 결과 화면부터 ───── */
+(function init() {
+  const saved = loadPicks();
+  if (!saved) return;
+  picks = saved;
+  step = QUESTIONS.length;
+  showResult(true);
+})();
 </script>
 </body>
 </html>
