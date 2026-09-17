@@ -146,8 +146,9 @@ main{max-width:720px; margin:0 auto; padding:24px 20px 80px;}
     <h3>같은 주제, 다른 태도</h3>
   </div>
   <p class="step-hint">
-    미술관이나 기관에서 보내는 소식지입니다. 위의 네 개와 나란히 놓고 읽어보세요.
-    어느 쪽이 더 좋은 글인지를 따지는 게 아니라, <b>목적이 다르면 글이 어떻게 달라지는지</b>를 보는 것입니다.
+    미술관과 잡지, 그리고 미술과 상관없는 기관이 내는 글입니다. 위의 네 개와 나란히 놓고 읽어보세요.
+    어느 쪽이 더 좋은 글인지 따지는 게 아닙니다. <b>읽는 사람을 누구로 생각하느냐에 따라 글이 어떻게 달라지는지</b>를 보는 것입니다.<br>
+    여기까지 보고 나면, 내 아트 레터를 어느 쪽에 가깝게 쓸지 정할 수 있어요.
   </p>
 
   <div id="listB"></div>
@@ -185,8 +186,8 @@ const NEWSLETTERS = [
   },
   {
     emoji: '📜', name: '우시사 (우리는 시를 사랑해)', tag: '시',
-    url: 'https://stibee.com/api/v1.0/emails/share/0IBCdTIItTRGEIlnbS3xtiPpxGkZ_To',
-    issue: '이토록 내 편이라니',
+    url: 'https://stibee.com/api/v1.0/emails/share/nS4qtDfRhl1ZsTNiPrlYxESR-vhKbd0',
+    issue: '진실을 알아도 다정할 수 있습니다',
     desc: '시인이 직접 시 한 편을 골라 소개하는 뉴스레터입니다. 작품 하나를 두고 이렇게 길게 이야기할 수 있다는 걸 보여줘요.',
     watch: '시에 대한 <b>설명</b>과 글쓴이의 <b>개인적인 이야기</b>가 어떻게 섞여 있는지 찾아보세요.'
   },
@@ -202,12 +203,27 @@ const NEWSLETTERS = [
 /* STEP 2 · 비교용 기관 소식지.
    아직 안 정했으면 빈 배열([])로 두세요. 정해지면 아래 형식으로 넣으면 됩니다. */
 const COMPARE = [
-  // {
-  //   emoji: '🏛️', name: '○○미술관 소식지', tag: '기관',
-  //   url: 'https://...',
-  //   desc: '한 줄 소개',
-  //   watch: '무엇을 볼지'
-  // }
+  {
+    emoji: '🏛️', name: '국립현대미술관 뉴스레터', tag: '미술관',
+    url: 'https://www.mmca.go.kr/artResearch/newsLetterList.do',
+    issue: '목록에서 관심 가는 글 하나를 골라 읽어보세요',
+    desc: '우리나라에서 가장 큰 미술관이 내는 뉴스레터입니다. 아트아트와 똑같이 미술을 다루지만, 읽는 사람을 대하는 태도가 다릅니다.',
+    watch: '아트아트와 <b>같은 주제, 다른 말투</b>입니다. 두 글의 제목을 나란히 적어놓고 비교해보세요.'
+  },
+  {
+    emoji: '📖', name: '월간미술 M.A.P', tag: '미술 잡지',
+    url: 'https://monthlyart.stibee.com/p/12',
+    issue: 'M.A.P Vol.12',
+    desc: '미술 잡지가 내는 뉴스레터입니다. 이미 미술을 잘 아는 사람을 독자로 생각하고 쓴 글이에요.',
+    watch: '모르는 낱말이 나왔을 때 <b>풀어주는지, 그냥 쓰는지</b> 보세요. 독자를 누구로 보는지가 거기서 드러납니다.'
+  },
+  {
+    emoji: '📊', name: '국가데이터처 보도자료', tag: '통계 · 미술 아님',
+    url: 'https://kostat.go.kr/board.es?mid=a10301010000&bid=203',
+    issue: '목록의 제목들만 훑어봐도 충분해요',
+    desc: '미술과 전혀 상관없는 분야입니다. 나라에서 조사한 숫자를 국민에게 알리는 글이에요.',
+    watch: '어피티도 숫자를 다루는 뉴스레터입니다. <b>같은 숫자를 두고 제목을 어떻게 다르게 붙였는지</b> 비교해보세요.'
+  }
 ];
 
 const CHECKS = [
