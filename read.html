@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e8d7c3">
+<meta name="robots" content="noindex, nofollow">
+<title>뉴스레터 읽어보기 · 아트 레터</title>
+<style>
+:root{
+  --paper:#fdfaf3; --paper-deep:#f6ecd9; --terracotta:#c97b5a; --terracotta-deep:#b3644a;
+  --sage:#8fae8b; --sage-deep:#729471; --ink:#4a3f38; --sub:#9a8b7c;
+  --card:#fffefb; --line:#ece1cf;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(201,123,90,.07), transparent 40%),
+    radial-gradient(circle at 92% 85%, rgba(143,174,139,.09), transparent 45%),
+    var(--paper);
+  color:var(--ink); min-height:100vh;
+}
+a{color:inherit;}
+
+.topbar{
+  position:sticky; top:0; z-index:20; background:rgba(253,250,243,.92); backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line); padding:16px 20px 12px;
+}
+.topbar-inner{max-width:720px; margin:0 auto; display:flex; align-items:center; gap:9px;}
+.brand-mark{font-size:22px;}
+.topbar h1{font-size:19px; margin:0; font-weight:800; letter-spacing:-.3px; color:var(--terracotta-deep);}
+.topbar small{display:block; font-size:12px; color:var(--sub); font-weight:500; margin-top:1px;}
+.nav-btn{
+  margin-left:auto; flex:none; border:1px solid var(--line); background:#fff; color:var(--sub);
+  font-size:12.5px; font-weight:700; padding:8px 13px; border-radius:11px; text-decoration:none; white-space:nowrap;
+}
+
+main{max-width:720px; margin:0 auto; padding:24px 20px 80px;}
+
+.lead{
+  background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px 22px 20px; margin-bottom:26px;
+}
+.lead h2{font-size:19px; margin:0 0 10px; font-weight:800; line-height:1.45;}
+.lead p{font-size:14px; color:var(--ink); line-height:1.85; margin:0 0 10px;}
+.lead .small{font-size:13px; color:var(--sub); line-height:1.8; margin:0;}
+
+.step-label{
+  display:flex; align-items:center; gap:9px; margin:0 0 6px;
+}
+.step-num{
+  background:var(--sage-deep); color:#fff; font-size:11px; font-weight:800; padding:4px 10px; border-radius:9px; flex:none;
+}
+.step-label h3{font-size:17px; margin:0; font-weight:800;}
+.step-hint{font-size:13px; color:var(--sub); line-height:1.75; margin:0 0 16px;}
+
+.nl-card{
+  display:block; background:var(--card); border:1px solid var(--line); border-radius:16px;
+  padding:18px 20px; margin-bottom:12px; text-decoration:none; transition:.14s;
+}
+.nl-card:hover{border-color:var(--terracotta); transform:translateY(-1px); box-shadow:0 8px 20px rgba(150,120,90,.1);}
+.nl-top{display:flex; align-items:center; gap:9px; margin-bottom:8px;}
+.nl-em{font-size:22px; flex:none;}
+.nl-name{font-size:16.5px; font-weight:800; color:var(--ink);}
+.nl-tag{
+  background:var(--paper-deep); color:var(--sage-deep); font-size:11px; font-weight:800;
+  padding:3px 9px; border-radius:8px; flex:none;
+}
+.nl-go{margin-left:auto; flex:none; font-size:12.5px; font-weight:800; color:var(--terracotta);}
+.nl-issue{
+  font-size:12.5px; font-weight:700; color:var(--terracotta-deep); margin:0 0 8px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.nl-desc{font-size:13.5px; line-height:1.8; color:var(--ink); margin:0 0 10px;}
+.nl-watch{
+  background:var(--paper-deep); border-radius:11px; padding:11px 13px; font-size:12.5px; line-height:1.7; color:var(--ink);
+}
+.nl-watch b{color:var(--terracotta-deep);}
+
+.compare{border:1px dashed var(--sage-deep); background:#fbfdfa;}
+.empty-slot{
+  background:var(--card); border:1px dashed var(--line); border-radius:16px; padding:22px 20px; text-align:center;
+}
+.empty-slot .em{font-size:30px; display:block; margin-bottom:8px;}
+.empty-slot p{font-size:13.5px; color:var(--sub); line-height:1.8; margin:0;}
+
+.checklist{
+  background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; margin-top:30px;
+}
+.checklist h3{font-size:16px; margin:0 0 6px; font-weight:800;}
+.checklist .small{font-size:13px; color:var(--sub); line-height:1.75; margin:0 0 16px;}
+.check-item{display:flex; gap:11px; padding:11px 0; border-bottom:1px dashed var(--line);}
+.check-item:last-child{border-bottom:none;}
+.check-num{
+  background:var(--paper-deep); color:var(--terracotta-deep); font-size:11.5px; font-weight:800;
+  width:24px; height:24px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex:none;
+}
+.check-body b{display:block; font-size:14px; font-weight:800; margin-bottom:3px;}
+.check-body span{font-size:13px; color:var(--sub); line-height:1.7;}
+
+.foot{margin-top:28px; text-align:center;}
+.foot a{
+  display:inline-block; background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep)); color:#fff;
+  font-size:15px; font-weight:800; padding:15px 30px; border-radius:14px; text-decoration:none;
+  box-shadow:0 8px 20px rgba(180,100,70,.26);
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brand-mark">📰</span>
+    <div>
+      <h1>뉴스레터 읽어보기</h1>
+      <small>내가 쓸 글이 어떤 모양인지 먼저 보기</small>
+    </div>
+    <a class="nav-btn" href="index.html">✉️ 아트 레터</a>
+  </div>
+</div>
+
+<main>
+  <div class="lead">
+    <h2>우리가 쓸 아트 레터는<br>'설명문'이 아니라 '편지'입니다</h2>
+    <p>
+      뉴스레터는 잘 모르는 사람에게 무언가를 친근하게 소개하는 글입니다.
+      매주 메일함으로 도착하고, 읽는 사람이 끝까지 읽을지 말지를 첫 문장에서 정해버려요.
+    </p>
+    <p class="small">
+      아래 네 개를 읽어보세요. 분야는 시·경제·시사·미술로 다 다르지만, 글을 끌고 가는 방식에는 공통점이 있습니다.
+      그 공통점을 찾는 것이 오늘의 목표예요. 링크를 누르면 새 창에서 열립니다.
+    </p>
+  </div>
+
+  <div class="step-label">
+    <span class="step-num">STEP 1</span>
+    <h3>친근하게 말을 거는 뉴스레터</h3>
+  </div>
+  <p class="step-hint">네 개 중 최소 두 개는 끝까지 읽어보세요.</p>
+
+  <div id="listA"></div>
+
+  <div class="step-label" style="margin-top:34px;">
+    <span class="step-num">STEP 2</span>
+    <h3>같은 주제, 다른 태도</h3>
+  </div>
+  <p class="step-hint">
+    미술관이나 기관에서 보내는 소식지입니다. 위의 네 개와 나란히 놓고 읽어보세요.
+    어느 쪽이 더 좋은 글인지를 따지는 게 아니라, <b>목적이 다르면 글이 어떻게 달라지는지</b>를 보는 것입니다.
+  </p>
+
+  <div id="listB"></div>
+
+  <div class="checklist">
+    <h3>읽을 때 이 네 가지만 찾아보세요</h3>
+    <p class="small">전부 기억할 필요 없어요. 이 네 가지가 곧 내 아트 레터의 뼈대가 됩니다.</p>
+    <div id="checkBox"></div>
+  </div>
+
+  <div class="foot">
+    <a href="index.html">다 읽었어요, 레터 쓰러 가기</a>
+  </div>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   뉴스레터 목록. 주소나 설명을 바꾸려면 여기만 고치면 됩니다.
+   ═══════════════════════════════════════════════════════════ */
+
+const NEWSLETTERS = [
+  {
+    emoji: '🦔', name: '뉴닉', tag: '시사',
+    url: 'https://stibee.com/api/v1.0/emails/share/hyAA7ANxlnwlxKcOzgj6VK4jz1otnuU',
+    issue: '"사과가 왜 심심하죠?" 문해력 이야기',
+    desc: '세상 돌아가는 소식을 친구가 옆에서 설명해주듯 풀어주는 뉴스레터입니다. 어려운 뉴스를 어떻게 말 걸듯 바꾸는지 보세요.',
+    watch: '<b>첫 문장</b>을 유심히 보세요. "안녕하세요"로 시작하지 않고도 어떻게 말을 걸고 있나요?'
+  },
+  {
+    emoji: '🎨', name: '아트아트', tag: '미술',
+    url: 'https://www.artart.today/artletter/?q=YToyOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjtzOjQ6InBhZ2UiO2k6MTQ7fQ%3D%3D&bmode=view&idx=162556804&t=board',
+    issue: 'VOL.127 죽음을 박제한 예술가, 데미안 허스트',
+    desc: '미술 작품을 한 점씩 소개하는 뉴스레터입니다. 우리가 쓸 아트 레터와 가장 비슷한 글이에요. 이번 호에 나오는 작가도 물감이 아닌 재료로 작업한 사람입니다.',
+    watch: '<b>작품 사진과 글이 놓인 순서</b>를 보세요. 사진을 먼저 보여주고 설명하나요, 설명하고 나서 보여주나요?'
+  },
+  {
+    emoji: '📜', name: '우시사 (우리는 시를 사랑해)', tag: '시',
+    url: 'https://stibee.com/api/v1.0/emails/share/0IBCdTIItTRGEIlnbS3xtiPpxGkZ_To',
+    issue: '이토록 내 편이라니',
+    desc: '시인이 직접 시 한 편을 골라 소개하는 뉴스레터입니다. 작품 하나를 두고 이렇게 길게 이야기할 수 있다는 걸 보여줘요.',
+    watch: '시에 대한 <b>설명</b>과 글쓴이의 <b>개인적인 이야기</b>가 어떻게 섞여 있는지 찾아보세요.'
+  },
+  {
+    emoji: '💰', name: '어피티', tag: '경제',
+    url: 'https://uppity.co.kr/%f0%9f%92%b0%ec%95%a0%ed%94%8c-ceo-%ea%b8%b0%ec%a1%b4-%ed%8f%b4%eb%8d%94%eb%b8%94%ed%8f%b0%ec%9d%80-%ed%8f%b0-%eb%91%90%ea%b0%9c-%eb%b6%99%ec%97%ac%eb%86%93%ec%9d%80-%eb%93%af-%ec%96%b4%ec%83%89/',
+    issue: '애플 CEO: 기존 폴더블폰은 어색해',
+    desc: '경제 소식을 처음 듣는 사람 기준으로 풀어주는 뉴스레터입니다. 모르는 용어를 어떻게 설명하는지가 볼거리예요.',
+    watch: '<b>어려운 낱말이 나온 자리</b>를 찾아보세요. 그냥 쓰고 넘어가나요, 아니면 옆에서 풀어주나요?'
+  }
+];
+
+/* STEP 2 · 비교용 기관 소식지.
+   아직 안 정했으면 빈 배열([])로 두세요. 정해지면 아래 형식으로 넣으면 됩니다. */
+const COMPARE = [
+  // {
+  //   emoji: '🏛️', name: '○○미술관 소식지', tag: '기관',
+  //   url: 'https://...',
+  //   desc: '한 줄 소개',
+  //   watch: '무엇을 볼지'
+  // }
+];
+
+const CHECKS = [
+  { t: '제목', s: '무엇을 알려주는 제목인가요, 아니면 궁금하게 만드는 제목인가요?' },
+  { t: '첫 문장', s: '어떻게 시작하나요? 질문인가요, 장면인가요, 인사인가요?' },
+  { t: '소제목', s: '글을 몇 덩어리로 나눴나요? 각 덩어리는 무엇을 맡고 있나요?' },
+  { t: '마지막 문장', s: '어떻게 끝나나요? 정리인가요, 질문인가요, 글쓴이의 느낌인가요?' }
+];
+
+/* ═══════════════ 여기부터는 동작 코드 ═══════════════ */
+const el = (id) => document.getElementById(id);
+
+function cardHtml(n, extraClass) {
+  return `<a class="nl-card ${extraClass || ''}" href="${n.url}" target="_blank" rel="noopener">
+    <div class="nl-top">
+      <span class="nl-em">${n.emoji}</span>
+      <span class="nl-name">${n.name}</span>
+      <span class="nl-tag">${n.tag}</span>
+      <span class="nl-go">읽으러 가기 →</span>
+    </div>
+    ${n.issue ? `<p class="nl-issue">이번에 읽을 글 · ${n.issue}</p>` : ''}
+    <p class="nl-desc">${n.desc}</p>
+    <div class="nl-watch">👀 ${n.watch}</div>
+  </a>`;
+}
+
+el('listA').innerHTML = NEWSLETTERS.map(n => cardHtml(n)).join('');
+
+el('listB').innerHTML = COMPARE.length
+  ? COMPARE.map(n => cardHtml(n, 'compare')).join('')
+  : `<div class="empty-slot">
+       <span class="em">🏛️</span>
+       <p>비교해서 읽을 소식지는 수업 시간에 함께 봅니다.<br>선생님 화면을 봐주세요.</p>
+     </div>`;
+
+el('checkBox').innerHTML = CHECKS.map((c, i) => `
+  <div class="check-item">
+    <span class="check-num">${i + 1}</span>
+    <span class="check-body"><b>${c.t}</b><span>${c.s}</span></span>
+  </div>`).join('');
+</script>
+</body>
+</html>
