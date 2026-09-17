@@ -132,6 +132,23 @@ tr.done{background:#fbfdfa;}
 .l-content hr{border:none; border-top:2px dashed var(--line); margin:20px 0;}
 .l-summary{background:var(--paper-deep); border-radius:12px; padding:13px 15px; font-size:13.5px; line-height:1.8; white-space:pre-line;}
 
+.cm-group{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:12px;}
+.cm-head{font-size:13.5px; font-weight:800; margin-bottom:3px;}
+.cm-who{font-size:11.5px; color:var(--sub); margin-bottom:12px;}
+.cm-item{display:flex; gap:10px; padding:10px 0; border-top:1px dashed var(--line);}
+.cm-body{min-width:0; flex:1;}
+.cm-top{display:flex; align-items:center; gap:7px; margin-bottom:3px; flex-wrap:wrap;}
+.cm-name{font-size:12.5px; font-weight:800;}
+.cm-badge{background:var(--paper-deep); color:var(--sage-deep); font-size:10px; font-weight:800; padding:2px 7px; border-radius:6px;}
+.cm-badge.grown{background:#e3ede1; color:#54764f;}
+.cm-when{font-size:11px; color:var(--sub);}
+.cm-text{font-size:13.5px; line-height:1.7; white-space:pre-wrap; word-break:break-word;}
+.cm-del{
+  flex:none; align-self:flex-start; border:1px solid var(--line); background:#fff; color:var(--danger);
+  font-size:11.5px; font-weight:700; padding:6px 10px; border-radius:8px;
+}
+.cm-del:hover{border-color:var(--danger);}
+
 textarea.roster{
   width:100%; min-height:110px; border:1px solid var(--line); border-radius:11px; padding:11px;
   font-size:13px; line-height:1.7; background:#fffefc; color:var(--ink); resize:vertical;
@@ -186,6 +203,7 @@ textarea.roster{
         <button class="tab on" data-tab="status" onclick="goTab('status')">📊 진행 현황</button>
         <button class="tab" data-tab="media" onclick="goTab('media')">🧭 매체 분포</button>
         <button class="tab" data-tab="letters" onclick="goTab('letters')">💌 레터 모아보기</button>
+        <button class="tab" data-tab="comments" onclick="goTab('comments')">💬 댓글</button>
         <button class="tab" data-tab="roster" onclick="goTab('roster')">👥 명단</button>
       </div>
     </div>
@@ -231,6 +249,18 @@ textarea.roster{
         펼친 레터만 인쇄돼요. 한 명 것만 뽑으려면 그 레터만 펼친 뒤 인쇄를 누르세요.
       </div>
       <div id="letterBox"></div>
+    </section>
+
+    <!-- 댓글 -->
+    <section id="tab-comments" class="hidden">
+      <div class="bar">
+        <div id="classChips4" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        <button class="btn spacer" onclick="window.print()">🖨️ 인쇄 · PDF</button>
+      </div>
+      <div class="muted no-print" style="margin-bottom:12px;">
+        학교 구성원이 남긴 댓글이 레터별로 모입니다. 부적절한 댓글은 지울 수 있어요. 지우면 되돌릴 수 없습니다.
+      </div>
+      <div id="commentBox"></div>
     </section>
 
     <!-- 명단 -->
@@ -300,7 +330,7 @@ function enter() {
 el('pw').addEventListener('keydown', e => { if (e.key === 'Enter') tryEnter(); });
 
 /* ───── 데이터 ───── */
-let letters = [], drafts = [], results = [];
+let letters = [], drafts = [], results = [], comments = [];
 let activeClass = '전체';
 const ready = new Set();          // 응답이 온 컬렉션
 const failed = [];                // 못 읽은 컬렉션
@@ -310,6 +340,7 @@ function start() {
   watch('art_letters', d => { letters = d; });
   watch('art_letter_drafts', d => { drafts = d; });
   watch('art_media_results', d => { results = d; });
+  watch('art_letter_comments', d => { comments = d; });
   loadRoster();
 }
 function watch(name, setter) {
@@ -412,28 +443,29 @@ function inClass(s) { return activeClass === '전체' || s.className === activeC
 /* ───── 화면 ───── */
 function goTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name));
-  ['status', 'media', 'letters', 'roster'].forEach(t =>
+  ['status', 'media', 'letters', 'comments', 'roster'].forEach(t =>
     el('tab-' + t).classList.toggle('hidden', t !== name));
   window.scrollTo(0, 0);
 }
 function pickClass(c) { activeClass = c; renderAll(); }
 
 function renderAll() {
-  if (ready.size < 3) return;
+  if (ready.size < 4) return;
   const students = buildStudents();
   renderChips(students);
   renderStatus(students);
   renderMedia(students);
   renderLetters();
+  renderComments();
   const mine = students.filter(inClass);
   el('headCount').textContent =
-    `학생 ${mine.length}명 · 레터 ${mine.filter(s => s.letter).length}편 · 테스트 ${mine.filter(s => s.media).length}명`
+    `학생 ${mine.length}명 · 레터 ${mine.filter(s => s.letter).length}편 · 테스트 ${mine.filter(s => s.media).length}명 · 댓글 ${comments.length}개`
     + (failed.length ? ` · ⚠️ 못 읽음: ${failed.join(', ')}` : '');
 }
 
 function renderChips(students) {
   const names = ['전체', ...classList(students)];
-  ['classChips', 'classChips2', 'classChips3'].forEach(boxId => {
+  ['classChips', 'classChips2', 'classChips3', 'classChips4'].forEach(boxId => {
     const box = el(boxId);
     box.innerHTML = '';
     names.forEach(c => {
@@ -585,6 +617,62 @@ function renderLetters() {
     box.appendChild(item);
   });
 }
+/* ───── 댓글 ───── */
+function commentTime(c) {
+  const d = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : null;
+  if (!d) return '';
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+function renderComments() {
+  const box = el('commentBox');
+  const shown = letters.filter(l => activeClass === '전체' || l.className === activeClass);
+  const groups = shown.map(l => ({
+    letter: l,
+    list: comments
+      .filter(c => c.letterId === l.id)
+      .sort((a, b) => (a.createdAt && a.createdAt.seconds || 0) - (b.createdAt && b.createdAt.seconds || 0))
+  })).filter(g => g.list.length);
+
+  if (!groups.length) {
+    box.innerHTML = '<div class="muted">아직 댓글이 없어요.</div>';
+    return;
+  }
+  box.innerHTML = '';
+  groups.forEach(g => {
+    const who = isSample(g.letter) ? '예시'
+      : `${g.letter.className || ''} ${g.letter.studentNumber || ''}번 ${g.letter.studentName || ''}`;
+    const wrap = document.createElement('div');
+    wrap.className = 'cm-group';
+    wrap.innerHTML = `
+      <div class="cm-head">${escapeHtml(g.letter.letterTitle || '(제목 없음)')}</div>
+      <div class="cm-who">${escapeHtml(who)} · 댓글 ${g.list.length}개</div>
+      ${g.list.map(c => `
+        <div class="cm-item">
+          <div class="cm-body">
+            <div class="cm-top">
+              <span class="cm-name">${escapeHtml(c.name || '이름 없음')}</span>
+              <span class="cm-badge${c.role === 'grown' ? ' grown' : ''}">${c.role === 'grown' ? '선생님' : '학생'}</span>
+              <span class="cm-when">${commentTime(c)}</span>
+            </div>
+            <div class="cm-text">${escapeHtml(c.text || '')}</div>
+          </div>
+          <button class="cm-del no-print" data-id="${c.id}">삭제</button>
+        </div>`).join('')}`;
+    wrap.querySelectorAll('.cm-del').forEach(btn => {
+      btn.onclick = () => deleteComment(btn.dataset.id);
+    });
+    box.appendChild(wrap);
+  });
+}
+function deleteComment(id) {
+  const c = comments.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`이 댓글을 지울까요?\n\n${c.name}: ${c.text}`)) return;
+  db.collection('art_letter_comments').doc(id).delete()
+    .then(() => toast('댓글을 지웠어요'))
+    .catch(e => { console.error(e); toast('지우지 못했어요'); });
+}
+
 function toggleAll(open) {
   document.querySelectorAll('#letterBox .letter-item').forEach(item => {
     item.querySelector('.letter-body').classList.toggle('hidden', !open);

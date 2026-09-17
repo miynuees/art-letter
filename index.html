@@ -44,6 +44,64 @@ input,textarea,select{font-family:inherit;}
   background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep));
   box-shadow:0 8px 20px rgba(180,100,70,.28); margin-top:6px;
 }
+.guest-link{
+  display:block; margin-top:14px; font-size:13px; font-weight:800; color:var(--sage-deep);
+  text-decoration:none;
+}
+.guest-link:hover{color:var(--terracotta-deep);}
+
+/* ───── 댓글 ───── */
+.c-wrap{margin-top:30px; border-top:1px dashed var(--line); padding-top:20px;}
+.c-label{font-size:12px; font-weight:800; color:var(--terracotta-deep); margin-bottom:12px;}
+.c-label span{color:var(--sub);}
+.c-empty{font-size:13px; color:var(--sub); line-height:1.7; margin-bottom:16px;}
+.c-item{
+  background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:12px 14px; margin-bottom:8px;
+}
+.c-item.grown{background:#fbfdfa; border-color:#d5e3d3;}
+.c-top{display:flex; align-items:center; gap:7px; margin-bottom:5px;}
+.c-name{font-size:12.5px; font-weight:800; color:var(--ink);}
+.c-badge{
+  background:var(--paper-deep); color:var(--sage-deep); font-size:10px; font-weight:800;
+  padding:2px 7px; border-radius:6px; flex:none;
+}
+.c-item.grown .c-badge{background:#e3ede1; color:#54764f;}
+.c-when{margin-left:auto; font-size:11px; color:var(--sub); flex:none;}
+.c-text{font-size:14px; line-height:1.75; color:var(--ink); white-space:pre-wrap; word-break:break-word;}
+
+.c-form{background:var(--paper-deep); border-radius:14px; padding:14px; margin-top:14px;}
+.c-hint{font-size:12px; color:var(--ink); line-height:1.7; margin-bottom:10px;}
+.c-who{display:flex; align-items:center; gap:7px; margin-bottom:8px; flex-wrap:wrap;}
+.c-who-fixed{font-size:12.5px; font-weight:800; color:var(--sage-deep);}
+.c-who input{
+  flex:1; min-width:110px; border:1px solid var(--line); border-radius:9px; padding:9px 10px;
+  font-size:13.5px; background:#fffefc; color:var(--ink); font-family:inherit;
+}
+.c-who input:focus{outline:none; border-color:var(--terracotta);}
+.c-role{display:flex; gap:5px; flex:none;}
+.c-role button{
+  border:1px solid var(--line); background:#fff; color:var(--sub); font-size:12px; font-weight:700;
+  padding:8px 12px; border-radius:9px;
+}
+.c-role button.on{background:var(--sage-deep); border-color:var(--sage-deep); color:#fff;}
+.c-form textarea{
+  width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 11px; font-size:14px;
+  background:#fffefc; color:var(--ink); font-family:inherit; line-height:1.6; resize:vertical;
+}
+.c-form textarea:focus{outline:none; border-color:var(--terracotta);}
+.c-send{
+  width:100%; margin-top:8px; border:none; border-radius:11px; padding:12px; color:#fff;
+  font-size:14px; font-weight:800;
+  background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep));
+}
+.c-send:disabled{opacity:.5;}
+
+.row-cmt{
+  flex:none; background:var(--paper-deep); color:var(--sage-deep); font-size:10.5px; font-weight:800;
+  padding:2px 7px; border-radius:6px;
+}
+
 .teacher-link{
   display:inline-block; margin-top:16px; font-size:12.5px; font-weight:700; color:var(--sub);
   text-decoration:none; border-bottom:1px dashed var(--line); padding-bottom:2px;
@@ -268,6 +326,7 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
       <div class="field"><label>학번</label><input id="lg-sid" inputmode="numeric" placeholder="예: 20207" maxlength="6"></div>
       <div class="field"><label>이름</label><input id="lg-name" placeholder="이름" maxlength="12"></div>
       <button class="login-btn" onclick="doLogin()">들어가기</button>
+      <a class="guest-link" href="#" onclick="enterGuest(); return false;">학번 없이 구경하기</a>
       <a class="teacher-link" href="teacher.html">🗂️ 선생님 페이지</a>
     </div>
   </div>
@@ -300,7 +359,7 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
       아직 도착한 레터가 없어요.<br>오른쪽 아래 버튼으로 첫 레터를 써보세요!
     </div>
   </main>
-  <button class="fab" onclick="openWrite()">✏️ 레터 쓰기</button>
+  <button class="fab" id="writeFab" onclick="openWrite()">✏️ 레터 쓰기</button>
 </div>
 
 <!-- ───────── 작성 화면 ───────── -->
@@ -398,6 +457,16 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
     <div class="modal-sub" id="m-artwork"></div>
     <div class="modal-meta" id="m-meta"></div>
     <div class="modal-body" id="m-body"></div>
+    <div class="c-wrap">
+      <div class="c-label">댓글 <span id="c-count"></span></div>
+      <div id="c-list"></div>
+      <div class="c-form">
+        <div class="c-hint">어떤 부분이 기억에 남았나요? 글에서 한 군데를 짚어 적어주면 쓴 사람에게 큰 도움이 돼요.</div>
+        <div class="c-who" id="c-who"></div>
+        <textarea id="c-text" rows="2" maxlength="300" placeholder="한 문장이면 충분해요"></textarea>
+        <button class="c-send" id="c-send" onclick="sendComment()">댓글 남기기</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -420,6 +489,7 @@ try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); }
 catch (e) { console.error('Firebase 초기화 실패', e); }
 const lettersRef = () => db.collection('art_letters');
 const draftsRef = () => db.collection('art_letter_drafts');
+const commentsRef = () => db.collection('art_letter_comments');
 
 /* ───── helpers ───── */
 const el = (id) => document.getElementById(id);
@@ -452,6 +522,7 @@ function parseSid(sid) {
 function loadMe() {
   try {
     const m = JSON.parse(localStorage.getItem(LOGIN_KEY) || 'null');
+    if (m && m.guest) return m;
     return (m && m.sid && m.name && m.className) ? m : null;
   } catch (e) { return null; }
 }
@@ -466,16 +537,25 @@ function doLogin() {
   try { localStorage.setItem(LOGIN_KEY, JSON.stringify(ME)); } catch (e) {}
   enterGallery();
 }
+// 학번 없이 읽기만 하는 손님
+function enterGuest() {
+  ME = { guest: true, name: '', className: '', studentNumber: '' };
+  try { localStorage.setItem(LOGIN_KEY, JSON.stringify(ME)); } catch (e) {}
+  enterGallery();
+}
 function logout() {
   if (!confirm('나갈까요? 쓰던 내용은 학번으로 다시 들어오면 그대로 있어요.')) return;
   try { localStorage.removeItem(LOGIN_KEY); } catch (e) {}
   location.reload();
 }
 function enterGallery() {
-  el('whoText').textContent = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
+  const guest = !!ME.guest;
+  el('whoText').textContent = guest ? '구경 중' : `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
+  el('writeFab').classList.toggle('hidden', guest);      // 손님은 레터를 쓰지 않는다
   el('screen-login').classList.add('hidden');
   el('screen-gallery').classList.remove('hidden');
   startListening();
+  watchComments();
 }
 
 /* ───── 상태 ───── */
@@ -529,11 +609,99 @@ function renderGallery() {
     row.className = 'letter-row' + (isSampleLetter(letter) ? ' letter-row-sample' : '');
     row.onclick = () => openDetail(letter);
     const badge = isSampleLetter(letter) ? '<span class="row-badge">예시</span>' : '';
+    const n = commentsOf(letter.id).length;
+    const cmt = n ? `<span class="row-cmt">댓글 ${n}</span>` : '';
     row.innerHTML = `
-      <div class="row-title">${badge}<span class="row-title-text">${escapeHtml(letter.letterTitle || '(제목 없음)')}</span></div>
+      <div class="row-title">${badge}<span class="row-title-text">${escapeHtml(letter.letterTitle || '(제목 없음)')}</span>${cmt}</div>
       <div class="row-meta">${escapeHtml(meta)}</div>`;
     grid.appendChild(row);
   });
+}
+
+/* ───── 댓글 ───── */
+let allComments = [];
+let openLetterId = null;
+let guestRole = 'student';   // 손님이 고른 신분
+
+function watchComments() {
+  commentsRef().onSnapshot(snap => {
+    allComments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderGallery();
+    if (openLetterId) renderComments();
+  }, err => console.error('댓글 불러오기 실패', err));
+}
+function commentsOf(letterId) {
+  return allComments
+    .filter(c => c.letterId === letterId)
+    .sort((a, b) => (a.createdAt && a.createdAt.seconds || 0) - (b.createdAt && b.createdAt.seconds || 0));
+}
+function commentTime(c) {
+  const d = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : null;
+  if (!d) return '';
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+function renderComments() {
+  const list = commentsOf(openLetterId);
+  el('c-count').textContent = list.length ? `${list.length}개` : '';
+  el('c-list').innerHTML = list.length
+    ? list.map(c => `
+        <div class="c-item${c.role === 'grown' ? ' grown' : ''}">
+          <div class="c-top">
+            <span class="c-name">${escapeHtml(c.name || '이름 없음')}</span>
+            <span class="c-badge">${c.role === 'grown' ? '선생님' : '학생'}</span>
+            <span class="c-when">${commentTime(c)}</span>
+          </div>
+          <div class="c-text">${escapeHtml(c.text || '')}</div>
+        </div>`).join('')
+    : '<div class="c-empty">아직 댓글이 없어요. 첫 댓글을 남겨보세요.</div>';
+
+  // 누구로 쓰는지
+  if (ME && !ME.guest) {
+    el('c-who').innerHTML = `<span class="c-who-fixed">${escapeHtml(`${ME.className} ${ME.studentNumber}번 ${ME.name}`)}</span>`;
+  } else {
+    el('c-who').innerHTML = `
+      <input id="c-name" maxlength="20" placeholder="이름 (예: 2-5 김하늘)" value="${escapeHtml(guestName)}">
+      <span class="c-role">
+        <button type="button" id="role-s" onclick="pickRole('student')">학생</button>
+        <button type="button" id="role-g" onclick="pickRole('grown')">선생님</button>
+      </span>`;
+    el('role-s').classList.toggle('on', guestRole === 'student');
+    el('role-g').classList.toggle('on', guestRole === 'grown');
+    el('c-name').addEventListener('input', e => { guestName = e.target.value; });
+  }
+}
+let guestName = '';
+function pickRole(r) {
+  guestRole = r;
+  el('role-s').classList.toggle('on', r === 'student');
+  el('role-g').classList.toggle('on', r === 'grown');
+}
+function sendComment() {
+  if (!openLetterId) return;
+  const text = el('c-text').value.trim();
+  if (!text) { toast('댓글을 적어주세요'); return; }
+
+  let name, role;
+  if (ME && !ME.guest) {
+    name = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
+    role = 'student';
+  } else {
+    name = (el('c-name') ? el('c-name').value.trim() : '');
+    if (name.length < 2) { toast('이름을 적어주세요'); return; }
+    guestName = name;
+    role = guestRole;
+  }
+
+  const btn = el('c-send');
+  btn.disabled = true; btn.textContent = '남기는 중...';
+  commentsRef().add({
+    letterId: openLetterId, name, role, text,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    el('c-text').value = '';
+    toast('댓글을 남겼어요');
+  }).catch(e => { console.error(e); toast('댓글을 남기지 못했어요'); })
+    .finally(() => { btn.disabled = false; btn.textContent = '댓글 남기기'; });
 }
 
 /* ───── 상세보기 ───── */
@@ -567,9 +735,12 @@ function openDetail(letter) {
     html += `<div class="m-section-label">오늘의 레터 요약</div><div class="m-summary">${escapeHtml(letter.summaryText)}</div>`;
   }
   el('m-body').innerHTML = html;
+  openLetterId = letter.id || null;
+  el('c-text').value = '';
+  renderComments();
   el('modalOverlay').classList.remove('hidden');
 }
-function closeDetail() { el('modalOverlay').classList.add('hidden'); }
+function closeDetail() { openLetterId = null; el('modalOverlay').classList.add('hidden'); }
 
 /* ───── 화면 전환 ───── */
 function openWrite() {
