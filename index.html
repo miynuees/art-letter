@@ -44,6 +44,11 @@ input,textarea,select{font-family:inherit;}
   background:linear-gradient(135deg,var(--terracotta),var(--terracotta-deep));
   box-shadow:0 8px 20px rgba(180,100,70,.28); margin-top:6px;
 }
+.teacher-link{
+  display:inline-block; margin-top:16px; font-size:12.5px; font-weight:700; color:var(--sub);
+  text-decoration:none; border-bottom:1px dashed var(--line); padding-bottom:2px;
+}
+.teacher-link:hover{color:var(--terracotta-deep); border-bottom-color:var(--terracotta);}
 
 /* ───── 로그인한 사람 표시 ───── */
 .who-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:11px;}
@@ -263,6 +268,7 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
       <div class="field"><label>학번</label><input id="lg-sid" inputmode="numeric" placeholder="예: 20207" maxlength="6"></div>
       <div class="field"><label>이름</label><input id="lg-name" placeholder="이름" maxlength="12"></div>
       <button class="login-btn" onclick="doLogin()">들어가기</button>
+      <a class="teacher-link" href="teacher.html">🗂️ 선생님 페이지</a>
     </div>
   </div>
 </div>
@@ -281,7 +287,6 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
         <span class="who-text" id="whoText"></span>
         <div class="nav-group">
           <a class="nav-btn" href="test.html">🧭 매체 찾기</a>
-          <a class="nav-btn" href="teacher.html">🗂️ 선생님</a>
           <button class="logout-btn" onclick="logout()">로그아웃</button>
         </div>
       </div>
