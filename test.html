@@ -361,7 +361,7 @@ const QUESTIONS = [
     q: '책상 서랍을 열면 제일 많은 것은?',
     opts: [
       { t: '정체를 알 수 없는 다양한 잡동사니', score: { daily: 3, object: 1 } },
-      { t: '케이블, 충전기, 이어폰', score: { digital: 3, video: 1 } },
+      { t: '케이블, 충전기, 이어폰', score: { digital: 3, video: 1, light: 1 } },
       { t: '영수증, 티켓, 스티커 같은 종이', score: { collage: 3 } },
       { t: '실, 끈, 고무줄, 테이프', score: { fiber: 3 } }
     ]
@@ -379,7 +379,7 @@ const QUESTIONS = [
     q: '친구에게 무언가를 설명할 때 나는?',
     opts: [
       { t: '일단 종이에 그려서 보여준다', score: { collage: 2, install: 1 } },
-      { t: '폰에서 사진이나 영상을 찾아 보여준다', score: { video: 3, digital: 1 } },
+      { t: '폰에서 사진이나 영상을 찾아 보여준다', score: { video: 3, digital: 1, light: 1 } },
       { t: '몸으로 직접 해 보인다', score: { body: 3, kinetic: 1 } },
       { t: '주변 물건을 가져와 예로 든다', score: { object: 3, daily: 1 } }
     ]
@@ -398,7 +398,7 @@ const QUESTIONS = [
     opts: [
       { t: '그 동네에서만 파는 물건', score: { object: 3 } },
       { t: '돌, 나뭇잎, 조개껍데기', score: { land: 3, fiber: 1 } },
-      { t: '수십, 수백 장씩 찍은 사진', score: { digital: 2, video: 2 } },
+      { t: '수십, 수백 장씩 찍은 사진', score: { digital: 2, video: 2, light: 1 } },
       { t: '엽서, 티켓, 지도', score: { collage: 3 } }
     ]
   },
@@ -414,7 +414,7 @@ const QUESTIONS = [
   {
     q: '내가 만든 것을 보여줬을 때 듣고 싶은 말은?',
     opts: [
-      { t: '"헐~~ 이거 어떻게 만든 거야?"', score: { kinetic: 2, digital: 2 } },
+      { t: '"헐~~ 이거 어떻게 만든 거야?"', score: { kinetic: 2, digital: 2, light: 2 } },
       { t: '"완전 신기하다! 한 번 만져봐도 돼?"', score: { install: 3, light: 2 } },
       { t: '"미쳤다.. 뭘로 만들었어?"', score: { object: 3, daily: 2 } },
       { t: '"대박! 나도 따라 해보고 싶다"', score: { body: 3, fiber: 2 } }
