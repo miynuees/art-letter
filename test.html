@@ -63,6 +63,17 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
   border-radius:14px; padding:14px; font-size:14px; font-weight:700; margin-top:10px;
 }
 
+/* ───── 이 페이지에서 바로 하는 로그인 ───── */
+.gate-form{margin-top:22px;}
+.gate-field{text-align:left; margin-bottom:11px;}
+.gate-field label{display:block; font-size:11.5px; color:var(--sub); font-weight:700; margin-bottom:5px;}
+.gate-field input{
+  width:100%; border:1px solid var(--line); border-radius:11px; padding:12px; font-size:15px;
+  background:#fffefc; color:var(--ink); font-family:inherit;
+}
+.gate-field input:focus{outline:none; border-color:var(--terracotta);}
+.gate-err{font-size:12.5px; color:#c65f5f; font-weight:700; min-height:17px; margin:2px 0 4px; text-align:left;}
+
 /* ───── 질문 화면 ───── */
 .progress-wrap{margin-bottom:22px;}
 .progress-bar{height:7px; background:var(--paper-deep); border-radius:99px; overflow:hidden;}
@@ -157,9 +168,15 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
   <section id="screen-gate" class="hidden">
     <div class="intro-card">
       <span class="intro-em">✉️</span>
-      <h2>아트 레터로<br>먼저 들어와주세요</h2>
-      <p>학번과 이름을 넣고 들어오면<br>테스트 결과가 학번에 저장돼요.<br>다른 기기에서 열어도 결과가 따라옵니다.</p>
-      <a class="big-btn" href="index.html" style="display:block; text-align:center; text-decoration:none; margin-top:24px;">아트 레터로 가기</a>
+      <h2>학번과 이름을<br>먼저 넣어주세요</h2>
+      <p>테스트 결과가 학번에 저장돼요.<br>다른 기기에서 열어도 결과가 따라옵니다.</p>
+      <div class="gate-form">
+        <div class="gate-field"><label>학번</label><input id="gt-sid" inputmode="numeric" placeholder="예: 20207" maxlength="6"></div>
+        <div class="gate-field"><label>이름</label><input id="gt-name" placeholder="이름" maxlength="12"></div>
+        <div class="gate-err" id="gtErr"></div>
+        <button class="big-btn" onclick="doLogin()">시작하기</button>
+        <a class="ghost-btn" href="index.html" style="display:block; text-align:center; text-decoration:none;">✉️ 아트 레터로 가기</a>
+      </div>
     </div>
   </section>
 
@@ -422,13 +439,37 @@ const QUESTIONS = [
 const el = (id) => document.getElementById(id);
 const mediaById = (id) => MEDIA.find(m => m.id === id);
 
-/* ───── 아트 레터에서 로그인한 학번·이름 가져오기 ───── */
+/* ───── 로그인 (아트 레터와 같은 저장소를 쓴다) ───── */
+const LOGIN_KEY = 'artLetterLogin';
 let ME = null;
 function loadMe() {
   try {
-    const m = JSON.parse(localStorage.getItem('artLetterLogin') || 'null');
+    const m = JSON.parse(localStorage.getItem(LOGIN_KEY) || 'null');
     return (m && m.sid && m.name && m.className) ? m : null;
   } catch (e) { return null; }
+}
+// 20207 → 2-2 7번. 4~6자리를 학년/반/번호로 나눈다. (index.html과 같은 규칙)
+function parseSid(sid) {
+  const cut = { 4: [1, 1], 5: [1, 2], 6: [1, 2] }[sid.length];
+  if (!cut) return null;
+  const grade = sid.slice(0, cut[0]);
+  const cls = parseInt(sid.slice(cut[0], cut[0] + cut[1]), 10);
+  const num = parseInt(sid.slice(cut[0] + cut[1]), 10);
+  if (!cls || !num) return null;
+  return { className: `${grade}-${cls}`, studentNumber: String(num) };
+}
+function doLogin() {
+  const sid = el('gt-sid').value.trim();
+  const name = el('gt-name').value.trim();
+  const err = (msg) => { el('gtErr').textContent = msg; };
+  if (!/^\d{4,6}$/.test(sid)) { err('학번을 숫자로 입력해주세요'); return; }
+  const parsed = parseSid(sid);
+  if (!parsed) { err('학번을 다시 확인해주세요'); return; }
+  if (name.length < 2) { err('이름을 입력해주세요'); return; }
+  err('');
+  ME = { sid, name, className: parsed.className, studentNumber: parsed.studentNumber };
+  try { localStorage.setItem(LOGIN_KEY, JSON.stringify(ME)); } catch (e) {}
+  enterTest();
 }
 
 /* ───── Firebase: 결과를 학번에 저장해 어느 기기에서든 따라오게 ───── */
@@ -602,10 +643,8 @@ function showResult(fromSaved) {
   show('result');
 }
 
-/* ───── 시작할 때 ───── */
-(function init() {
-  ME = loadMe();
-  if (!ME) { show('gate'); return; }   // 아트 레터에서 들어오지 않았으면 안내
+/* ───── 로그인한 뒤의 흐름 ───── */
+function enterTest() {
   el('whoText').textContent = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
   show('intro');
   const saved = loadPicks();
@@ -616,6 +655,16 @@ function showResult(fromSaved) {
   } else {
     restoreFromServer();                // 없으면 다른 기기에서 한 기록을 찾아본다
   }
+}
+
+/* ───── 시작할 때 ───── */
+(function init() {
+  ['gt-sid', 'gt-name'].forEach(id => {
+    el(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  });
+  ME = loadMe();
+  if (!ME) { show('gate'); el('gt-sid').focus(); return; }   // 아직 안 들어왔으면 여기서 바로 로그인
+  enterTest();
 })();
 </script>
 </body>
