@@ -207,8 +207,8 @@ main{max-width:680px; margin:0 auto; padding:24px 20px 80px;}
 
     <h3 class="all-label">다른 매체도 둘러보기</h3>
     <p class="all-hint">
-      테스트 결과는 출발점일 뿐이에요. 열한 가지를 다 훑어보고, 더 궁금한 매체가 있으면 그걸로 정해도 됩니다.
-      눌러서 설명과 작가를 확인해보세요.
+      테스트 결과는 출발점일 뿐입니다. 열한 가지 매체를 모두 살펴보고, 더 관심이 가는 매체가 있다면 그것을 선택해도 됩니다.
+      궁금한 것을 눌러서 설명과 작가를 확인해 보세요.
     </p>
     <div id="allMedia"></div>
 
@@ -567,7 +567,7 @@ function showResult(fromSaved) {
   el('rType').textContent = top.type;
   el('rMedia').textContent = top.name;
   el('rDesc').textContent = top.desc;
-  el('rAsk').innerHTML = '레터를 쓸 때 이 질문부터 붙잡아보세요<br>' + top.ask;
+  el('rAsk').innerHTML = '레터를 쓰기 전 이것부터 생각해 보세요<br>' + top.ask;
   el('rArtists').innerHTML = artistRows(top);
 
   const box = el('allMedia');
