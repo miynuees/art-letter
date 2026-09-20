@@ -76,6 +76,16 @@ main{max-width:1000px; margin:0 auto; padding:20px 20px 80px;}
 .btn.primary{background:var(--sage-deep); border-color:var(--sage-deep); color:#fff;}
 .spacer{margin-left:auto;}
 .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:14px;}
+.period-card{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.period-card h3{margin:0; font-size:15px;}
+.period-now{font-size:13px; color:var(--sub); font-weight:700;}
+.period-now b{color:var(--ink);}
+.period-btns{display:flex; gap:8px; margin-left:auto;}
+.period-btn{
+  border:1px solid var(--line); background:#fff; border-radius:10px;
+  padding:9px 16px; font-size:13.5px; font-weight:800; color:var(--sub);
+}
+.period-btn.on{background:var(--sage-deep); border-color:var(--sage-deep); color:#fff;}
 .card h3{font-size:14px; margin:0 0 12px; font-weight:800; color:var(--sage-deep);}
 .muted{font-size:12.5px; color:var(--sub); line-height:1.7;}
 
@@ -213,6 +223,14 @@ textarea.roster{
   <main>
     <!-- 진행 현황 -->
     <section id="tab-status">
+      <div class="card period-card no-print">
+        <h3>지금 기간</h3>
+        <span class="period-now" id="periodNow">불러오는 중...</span>
+        <div class="period-btns">
+          <button class="period-btn" id="periodResearch" onclick="setPeriod('research')">자료조사</button>
+          <button class="period-btn" id="periodWrite" onclick="setPeriod('write')">작성</button>
+        </div>
+      </div>
       <div class="stat-row" id="statRow"></div>
       <div class="bar">
         <div id="classChips" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
@@ -342,7 +360,37 @@ function start() {
   watch('art_letter_drafts', d => { drafts = d; });
   watch('art_media_results', d => { results = d; });
   watch('art_letter_comments', d => { comments = d; });
+  watchPeriod();
   loadRoster();
+}
+
+/* ───── 기간 (자료조사 / 작성) ─────
+   여기서 바꾸면 학생 화면에 바로 적용됩니다.
+   자료조사 = 작성 화면은 보이지만 입력이 잠깁니다. */
+const periodRef = () => db.collection('art_letter_settings').doc('period');
+let periodMode = 'write';
+function watchPeriod() {
+  periodRef().onSnapshot(doc => {
+    periodMode = (doc.exists && doc.data() && doc.data().mode === 'research') ? 'research' : 'write';
+    renderPeriod();
+  }, err => {
+    console.error('기간 설정', err);
+    el('periodNow').textContent = '기간 설정을 읽지 못했어요';
+  });
+}
+function renderPeriod() {
+  const research = periodMode === 'research';
+  el('periodNow').innerHTML = research
+    ? '<b>자료조사</b> · 학생은 작성 화면을 볼 수만 있어요'
+    : '<b>작성</b> · 학생이 레터를 쓰고 보낼 수 있어요';
+  el('periodResearch').classList.toggle('on', research);
+  el('periodWrite').classList.toggle('on', !research);
+}
+function setPeriod(mode) {
+  if (mode === periodMode) return;
+  periodRef().set({ mode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+    .then(() => toast(mode === 'research' ? '자료조사 기간으로 바꿨어요' : '작성 기간으로 바꿨어요'))
+    .catch(e => { console.error(e); toast('바꾸지 못했어요'); });
 }
 function watch(name, setter) {
   db.collection(name).onSnapshot(snap => {

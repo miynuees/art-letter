@@ -176,6 +176,41 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
 }
 .letter-row-sample{background:#fdf4ea;}
 .letter-row-sample:hover{background:#faeadb;}
+
+/* ───── 공지 행 ───── */
+.letter-row-notice{background:#f2f6f1;}
+.letter-row-notice:hover{background:#e8efe6;}
+.row-badge-notice{background:var(--sage-deep);}
+.link-list{display:flex; flex-direction:column; gap:9px;}
+.link-item{
+  display:flex; align-items:center; gap:11px; text-decoration:none;
+  background:var(--paper-deep); border:1px solid var(--line); border-radius:13px;
+  padding:13px 15px; color:var(--ink); transition:.12s;
+}
+.link-item:hover{background:#fff; border-color:var(--terracotta);}
+.link-src{
+  flex:0 0 auto; background:#fff; border:1px solid var(--line); border-radius:8px;
+  padding:4px 9px; font-size:11.5px; font-weight:800; color:var(--sub);
+}
+.link-name{flex:1 1 auto; min-width:0; font-size:14.5px; font-weight:700; line-height:1.5;}
+.link-arrow{flex:0 0 auto; color:var(--terracotta); font-weight:800;}
+@media (max-width:520px){
+  .link-item{align-items:flex-start;}
+  .link-src{margin-top:2px;}
+  .link-name{font-size:13.5px;}
+}
+
+/* ───── 자료조사 기간 잠금 ───── */
+.mode-banner{
+  position:sticky; top:0; z-index:20;
+  background:var(--sage-deep); color:#fff; border-radius:12px;
+  padding:13px 16px; font-size:14px; font-weight:800; text-align:center;
+  margin-bottom:16px; box-shadow:0 6px 16px rgba(110,130,105,.28);
+}
+.rich-editor.locked{background:#f6f3ef; color:var(--sub);}
+.tb-btn:disabled{opacity:.4;}
+.load-draft-btn:disabled{opacity:.45;}
+#screen-write input:disabled, #screen-write textarea:disabled{background:#f6f3ef; color:var(--sub);}
 .m-badge{
   display:inline-block; background:var(--terracotta); color:#fff; font-size:10.5px; font-weight:800;
   padding:3px 8px; border-radius:7px; letter-spacing:.4px; margin-right:7px; vertical-align:2px;
@@ -379,10 +414,12 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
       <h2>아트 레터 쓰기</h2>
     </div>
 
+    <div id="modeBanner" class="mode-banner hidden">지금은 자료조사 기간입니다.</div>
+
     <div class="field-group">
       <h3>작성자</h3>
       <div class="writer-line" id="writerLine"></div>
-      <button type="button" class="load-draft-btn" onclick="loadDraft()">📥 저장된 내용 불러오기</button>
+      <button type="button" class="load-draft-btn" id="loadDraftBtn" onclick="loadDraft()">📥 저장된 내용 불러오기</button>
       <div class="draft-hint">쓰던 내용은 자동으로 저장돼요. 다른 기기에서 쓰던 게 있으면 눌러서 가져올 수 있어요.</div>
     </div>
 
@@ -496,6 +533,17 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
   </div>
 </div>
 
+<!-- ───────── 공지: 참고할 글 모음 ───────── -->
+<div id="noticeOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeNotice()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeNotice()">✕</button>
+    <div class="modal-eyebrow"><span class="m-badge">공지</span></div>
+    <div class="modal-title">참고할 글 모음</div>
+    <div class="modal-meta">자료를 조사할 때 읽어보세요. 새 창으로 열려요.</div>
+    <div class="link-list" id="noticeLinks"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -516,6 +564,7 @@ catch (e) { console.error('Firebase 초기화 실패', e); }
 const lettersRef = () => db.collection('art_letters');
 const draftsRef = () => db.collection('art_letter_drafts');
 const commentsRef = () => db.collection('art_letter_comments');
+const settingsRef = () => db.collection('art_letter_settings').doc('period');
 
 /* ───── helpers ───── */
 const el = (id) => document.getElementById(id);
@@ -582,6 +631,32 @@ function enterGallery() {
   el('screen-gallery').classList.remove('hidden');
   startListening();
   watchComments();
+  watchMode();
+}
+
+/* ───── 기간 모드 (자료조사 / 작성) ─────
+   선생님 페이지에서 바꾸면 모든 학생 화면에 바로 적용됩니다.
+   art_letter_settings/period 문서의 mode 값: 'research' = 자료조사, 'write' = 작성 */
+let WRITE_OPEN = true;
+function watchMode() {
+  settingsRef().onSnapshot(doc => {
+    WRITE_OPEN = !(doc.exists && doc.data() && doc.data().mode === 'research');
+    applyMode();
+  }, err => console.error('기간 설정을 불러오지 못했어요', err));
+}
+function applyMode() {
+  const lock = !WRITE_OPEN;
+  el('modeBanner').classList.toggle('hidden', !lock);
+  INPUT_IDS.forEach(id => { el(id).disabled = lock; });
+  RICH_IDS.forEach(id => {
+    const ed = el(id);
+    if (!ed) return;
+    ed.setAttribute('contenteditable', lock ? 'false' : 'true');
+    ed.classList.toggle('locked', lock);
+  });
+  document.querySelectorAll('#screen-write .tb-btn').forEach(b => { b.disabled = lock; });
+  el('loadDraftBtn').disabled = lock;
+  el('submitBtn').disabled = lock;
 }
 
 /* ───── 상태 ───── */
@@ -628,6 +703,7 @@ function renderGallery() {
   const grid = el('galleryGrid');
   const list = activeFilter === '전체' ? allLetters : allLetters.filter(l => l.className === activeFilter);
   grid.innerHTML = '';
+  grid.appendChild(noticeRow());
   el('emptyState').classList.toggle('hidden', list.length > 0);
   list.forEach(letter => {
     const meta = [letter.className, letter.studentName, letterDateLabel(letter)].filter(Boolean).join(' · ');
@@ -642,6 +718,39 @@ function renderGallery() {
       <div class="row-meta">${escapeHtml(meta)}</div>`;
     grid.appendChild(row);
   });
+}
+
+/* ───── 공지: 참고할 글 모음 ─────
+   링크를 더하거나 뺄 때는 아래 목록만 고치면 됩니다. desc는 비워도 돼요. */
+const NOTICE_LINKS = [
+  { src: '아트아트', name: '수영장부터 아이패드까지, 호크니의 끝없는 시선 실험', url: 'https://www.artart.today/artletter/?q=YToyOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjtzOjQ6InBhZ2UiO2k6MTM7fQ%3D%3D&bmode=view&idx=164842256&t=board' },
+  { src: '아트아트', name: '브랜드가 되어버린 예술가, 살바도르 달리', url: 'https://www.artart.today/artletter/?q=YToyOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjtzOjQ6InBhZ2UiO2k6MTQ7fQ%3D%3D&bmode=view&idx=161063492&t=board' },
+  { src: '아트아트', name: '죽음을 박제한 예술가, 데미안 허스트', url: 'https://www.artart.today/artletter/?q=YToyOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjtzOjQ6InBhZ2UiO2k6MTQ7fQ%3D%3D&bmode=view&idx=162556804&t=board' },
+  { src: '우시사', name: "다름 아닌 '사랑'입니다", url: 'https://stibee.com/api/v1.0/emails/share/PS-MW4Gc1iMV4cTUhUwxXzbVXdKzkvs' },
+  { src: '우시사', name: '온통 리듬', url: 'https://stibee.com/api/v1.0/emails/share/YifBOEftgaVln9G05ZeYheaYwxxq4uw' },
+  { src: '우시사', name: '아름다움의 온도는 몇 도일까요?', url: 'https://stibee.com/api/v1.0/emails/share/esFWY5r0Uob96sBfOX0G2ycCDa0Xt0Y' },
+  { src: '우시사', name: '진실을 알아도 다정할 수 있습니다', url: 'https://stibee.com/api/v1.0/emails/share/nS4qtDfRhl1ZsTNiPrlYxESR-vhKbd0' },
+  { src: '어피티', name: '애플 CEO: 기존 폴더블폰은 폰 두개 붙여놓은 듯 어색해', url: 'https://uppity.co.kr/%f0%9f%92%b0%ec%95%a0%ed%94%8c-ceo-%ea%b8%b0%ec%a1%b4-%ed%8f%b4%eb%8d%94%eb%b8%94%ed%8f%b0%ec%9d%80-%ed%8f%b0-%eb%91%90%ea%b0%9c-%eb%b6%99%ec%97%ac%eb%86%93%ec%9d%80-%eb%93%af-%ec%96%b4%ec%83%89/' },
+  { src: '뉴닉', name: 'AI 시대 최대 위기? 청소년도 어른도, 읽기 능력 바닥 찍은 이유', url: 'https://newneek.co/@newneek/article/45876?utm_source=newsletter&utm_medium=daily&utm_campaign=260914&utm_content=45876' }
+];
+function openNotice() {
+  el('noticeLinks').innerHTML = NOTICE_LINKS.map(n => `
+    <a class="link-item" href="${n.url}" target="_blank" rel="noopener">
+      <span class="link-src">${escapeHtml(n.src)}</span>
+      <span class="link-name">${escapeHtml(n.name)}</span>
+      <span class="link-arrow">→</span>
+    </a>`).join('');
+  el('noticeOverlay').classList.remove('hidden');
+}
+function closeNotice() { el('noticeOverlay').classList.add('hidden'); }
+function noticeRow() {
+  const row = document.createElement('button');
+  row.className = 'letter-row letter-row-notice';
+  row.onclick = openNotice;
+  row.innerHTML = `
+    <div class="row-title"><span class="row-badge row-badge-notice">공지</span><span class="row-title-text">참고할 글 모음</span></div>
+    <div class="row-meta">자료를 조사할 때 읽어보면 좋은 뉴스레터</div>`;
+  return row;
 }
 
 /* ───── 댓글 ───── */
@@ -824,6 +933,7 @@ function applyDraftToForm(d) {
   syncKeywordLabels();
 }
 function loadDraft() {
+  if (!WRITE_OPEN) return;
   const key = draftKey();
   if (!key) return;
   if (hasDraftContent() && !confirm('지금 작성 중인 내용을 저장된 내용으로 덮어쓸까요?')) return;
@@ -850,9 +960,11 @@ function nowTimeLabel() {
 let autoSaveTimer = null;
 function scheduleAutoSave() {
   clearTimeout(autoSaveTimer);
+  if (!WRITE_OPEN) return;
   autoSaveTimer = setTimeout(saveDraft, 1500);
 }
 function saveDraft() {
+  if (!WRITE_OPEN) return;
   const key = draftKey();
   const statusEl = el('draftStatus');
   if (!key) { statusEl.textContent = ''; return; }
@@ -1099,6 +1211,7 @@ function collectRich(id) {
 
 /* ───── 제출 ───── */
 function submitLetter() {
+  if (!WRITE_OPEN) { toast('지금은 자료조사 기간입니다.'); return; }
   if (!ME) { toast('다시 들어와주세요'); return; }
   const { sid, className, studentNumber, name: studentName } = ME;
   const artworkTitle = el('f-artwork').value.trim();
@@ -1148,7 +1261,7 @@ function submitLetter() {
     console.error(e);
     toast('전송에 실패했어요. 다시 시도해주세요');
   }).finally(() => {
-    btn.disabled = false; btn.textContent = '레터 보내기 💌';
+    btn.disabled = !WRITE_OPEN; btn.textContent = '레터 보내기 💌';
   });
 }
 
