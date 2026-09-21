@@ -516,15 +516,11 @@ function buildStudents() {
     a.className.localeCompare(b.className, 'ko') || a.num - b.num || a.name.localeCompare(b.name, 'ko'));
 }
 function isSample(l) { return !!l.isSample || l.className === '예시'; }
-function classList(students) {
-  return Array.from(new Set(students.map(s => s.className).filter(c => c && c !== '?')))
-    .sort((a, b) => a.localeCompare(b, 'ko'));
-}
+// 칩은 '전체'와 분반(A반·E반)뿐입니다. 학번이 늘어도 학급 칩은 생기지 않아요.
 function inClass(s) {
   if (activeClass === '전체') return true;
   const g = activeClass.match(/^(.+)반$/);                 // 'A반' → 분반 A
-  if (g && GROUPS.includes(g[1])) return s.group === g[1];
-  return s.className === activeClass;
+  return GROUPS.includes(g && g[1]) ? s.group === g[1] : true;
 }
 
 /* ───── 화면 ───── */
@@ -551,7 +547,8 @@ function renderAll() {
 }
 
 function renderChips(students) {
-  const names = ['전체', ...GROUPS.map(g => g + '반'), ...classList(students)];
+  const names = ['전체', ...GROUPS.map(g => g + '반')];   // 분반 수업이라 학급(2-2 등) 칩은 안 씁니다
+  if (!names.includes(activeClass)) activeClass = '전체';   // 없어진 칩이 골라져 있으면 되돌린다
   ['classChips', 'classChips2', 'classChips3', 'classChips4'].forEach(boxId => {
     const box = el(boxId);
     box.innerHTML = '';
