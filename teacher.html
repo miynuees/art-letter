@@ -109,6 +109,17 @@ tr.done{background:#fbfdfa;}
 .dot.half{color:#d3a44e;}
 .dot.no{color:#d8ccbb;}
 .name-cell{font-weight:700;}
+.grp-btns{display:flex; gap:4px;}
+.grp-btn{
+  border:1px solid var(--line); background:#fff; border-radius:7px;
+  padding:4px 10px; font-size:12px; font-weight:800; color:#b9ac9c;
+}
+.grp-btn.on{background:var(--sage-deep); border-color:var(--sage-deep); color:#fff;}
+.del-btn{
+  border:1px solid var(--line); background:#fff; border-radius:7px;
+  padding:4px 9px; font-size:12px; font-weight:800; color:#c9a0a0;
+}
+.del-btn:hover{background:#fbeeee; border-color:#d99; color:#b05555;}
 .media-cell{font-size:12.5px; color:var(--sub);}
 .link-cell{color:var(--terracotta-deep); font-weight:800; font-size:12.5px; cursor:pointer;}
 
@@ -361,6 +372,7 @@ function start() {
   watch('art_media_results', d => { results = d; });
   watch('art_letter_comments', d => { comments = d; });
   watchPeriod();
+  watchGroups();
   loadRoster();
 }
 
@@ -404,6 +416,25 @@ function watch(name, setter) {
     ready.add(name);
     renderAll();
   });
+}
+
+/* ───── 분반 (A반 / E반) ─────
+   학생이 여러 반에서 섞여 오기 때문에, 선생님이 한 명씩 분반을 지정합니다.
+   이름을 바꾸려면 아래 GROUPS 목록만 고치면 돼요. */
+const GROUPS = ['A', 'E'];
+const groupsRef = () => db.collection('art_letter_settings').doc('groups');
+let groupOf = {};                 // { 학번: 'A' | 'E' }
+function watchGroups() {
+  groupsRef().onSnapshot(doc => {
+    groupOf = (doc.exists && doc.data() && doc.data().map) || {};
+    renderAll();
+  }, err => console.error('분반', err));
+}
+function setGroup(sid, g) {
+  const next = Object.assign({}, groupOf);
+  if (next[sid] === g) delete next[sid]; else next[sid] = g;   // 같은 걸 또 누르면 해제
+  groupsRef().set({ map: next }, { merge: false })
+    .catch(e => { console.error(e); toast('분반을 저장하지 못했어요'); });
 }
 
 /* ───── 명단 ───── */
@@ -479,6 +510,8 @@ function buildStudents() {
     if (st) st.letter = l;   // 여러 번 냈으면 마지막 것
   });
 
+  map.forEach(st => { st.group = groupOf[st.sid] || ''; });
+
   return Array.from(map.values()).sort((a, b) =>
     a.className.localeCompare(b.className, 'ko') || a.num - b.num || a.name.localeCompare(b.name, 'ko'));
 }
@@ -487,7 +520,12 @@ function classList(students) {
   return Array.from(new Set(students.map(s => s.className).filter(c => c && c !== '?')))
     .sort((a, b) => a.localeCompare(b, 'ko'));
 }
-function inClass(s) { return activeClass === '전체' || s.className === activeClass; }
+function inClass(s) {
+  if (activeClass === '전체') return true;
+  const g = activeClass.match(/^(.+)반$/);                 // 'A반' → 분반 A
+  if (g && GROUPS.includes(g[1])) return s.group === g[1];
+  return s.className === activeClass;
+}
 
 /* ───── 화면 ───── */
 function goTab(name) {
@@ -513,7 +551,7 @@ function renderAll() {
 }
 
 function renderChips(students) {
-  const names = ['전체', ...classList(students)];
+  const names = ['전체', ...GROUPS.map(g => g + '반'), ...classList(students)];
   ['classChips', 'classChips2', 'classChips3', 'classChips4'].forEach(boxId => {
     const box = el(boxId);
     box.innerHTML = '';
@@ -549,26 +587,70 @@ function renderStatus(students) {
       : (s.draft ? '<span class="dot half">◐</span>' : '<span class="dot no">○</span>');
     const title = s.letter ? escapeHtml(s.letter.letterTitle || '')
       : (s.draft ? `<span class="muted">${escapeHtml(s.draft.letterTitle || '(제목 아직)')}</span>` : '');
+    const grp = `<div class="grp-btns">${GROUPS.map(g =>
+      `<button class="grp-btn${s.group === g ? ' on' : ''}" onclick="setGroup('${s.sid}','${g}')">${g}</button>`).join('')}</div>`;
     return `<tr class="${s.letter ? 'done' : ''}">
       <td>${escapeHtml(s.className)}</td>
       <td class="center">${s.num || ''}</td>
       <td class="name-cell">${escapeHtml(s.name || '(이름 없음)')}</td>
+      <td class="no-print">${grp}</td>
       <td>${media}</td>
       <td class="center">${letterState}</td>
       <td>${title}</td>
+      <td class="center no-print"><button class="del-btn" title="이 학생 기록 지우기" onclick="deleteStudent('${s.sid}')">✕</button></td>
     </tr>`;
   }).join('');
   el('statusTable').innerHTML = `
     <table>
       <thead><tr>
-        <th>반</th><th class="center">번호</th><th>이름</th><th>매체 테스트</th>
-        <th class="center">레터</th><th>제목</th>
+        <th>반</th><th class="center">번호</th><th>이름</th><th class="no-print">분반</th><th>매체 테스트</th>
+        <th class="center">레터</th><th>제목</th><th class="no-print"></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <div class="muted" style="margin-top:12px;">
-      레터 ● 제출 완료 · ◐ 쓰는 중 · ○ 아직
+      레터 ● 제출 완료 · ◐ 쓰는 중 · ○ 아직 &nbsp;·&nbsp; 분반은 A/E를 눌러 지정 (같은 걸 또 누르면 해제)
     </div>`;
+}
+
+/* ───── 학생 기록 지우기 ─────
+   레터·쓰던 내용·매체 테스트 결과·분반 지정·명단 줄까지 지웁니다.
+   댓글은 학번이 남지 않아 지워지지 않습니다. */
+function deleteStudent(sid) {
+  const s = buildStudents().find(x => x.sid === sid);
+  const who = s ? `${s.className} ${s.num || ''}번 ${s.name || ''}`.replace(/\s+/g, ' ').trim() : sid;
+  const mine = letters.filter(l => !isSample(l) && l.sid === sid);
+  const what = [
+    mine.length ? `레터 ${mine.length}편` : null,
+    (s && s.draft) ? '쓰던 내용' : null,
+    (s && s.media) ? '매체 테스트 결과' : null
+  ].filter(Boolean).join(' · ') || '기록 없음';
+
+  if (!confirm(`${who} (${sid})
+지울 것: ${what}
+
+지울까요?`)) return;
+  if (!confirm('되돌릴 수 없어요. 정말 지울까요?')) return;
+
+  const batch = db.batch();
+  mine.forEach(l => batch.delete(db.collection('art_letters').doc(l.id)));
+  batch.delete(db.collection('art_letter_drafts').doc(sid));
+  batch.delete(db.collection('art_media_results').doc(sid));
+  if (groupOf[sid]) {
+    const next = Object.assign({}, groupOf);
+    delete next[sid];
+    batch.set(groupsRef(), { map: next }, { merge: false });
+  }
+  batch.commit().then(() => {
+    // 명단에 적어둔 줄도 함께 지운다
+    const left = el('rosterText').value.split('\n').filter(line => !line.trim().startsWith(sid));
+    el('rosterText').value = left.join('\n');
+    try { localStorage.setItem(ROSTER_KEY, el('rosterText').value); } catch (e) {}
+    roster = parseRoster(el('rosterText').value);
+    el('rosterInfo').textContent = roster.length ? `${roster.length}명 저장돼 있어요` : '아직 안 넣었어요';
+    toast('기록을 지웠어요');
+    renderAll();
+  }).catch(e => { console.error(e); toast('지우지 못했어요'); });
 }
 
 function copyMissing(kind) {
