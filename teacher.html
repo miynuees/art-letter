@@ -138,6 +138,8 @@ tr.done{background:#fbfdfa;}
 .letter-head{display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; padding:14px 16px; text-align:left;}
 .letter-who{font-size:12px; font-weight:800; color:var(--sage-deep); flex:none; width:110px;}
 .letter-title{font-size:14px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.draft-tag{background:#f3e3c8; color:#a8762f; font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:8px; flex:none;}
+.letter-item.is-draft{border-style:dashed;}
 .letter-arrow{margin-left:auto; color:var(--sub); font-weight:800; font-size:12px; flex:none;}
 .letter-body{padding:4px 20px 22px; border-top:1px dashed var(--line);}
 .l-sub{font-size:13px; color:var(--terracotta-deep); font-weight:700; margin:14px 0 4px;}
@@ -271,12 +273,14 @@ textarea.roster{
     <section id="tab-letters" class="hidden">
       <div class="bar">
         <div id="classChips3" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        <div id="viewChips" style="display:flex; gap:6px; flex-wrap:wrap; margin-left:6px; padding-left:12px; border-left:1px solid var(--line);"></div>
         <button class="btn spacer" onclick="toggleAll(true)">전부 펼치기</button>
         <button class="btn" onclick="toggleAll(false)">전부 접기</button>
         <button class="btn primary" onclick="window.print()">🖨️ 인쇄 · PDF</button>
       </div>
       <div class="muted no-print" style="margin-bottom:12px;">
         펼친 레터만 인쇄돼요. 한 명 것만 뽑으려면 그 레터만 펼친 뒤 인쇄를 누르세요.
+        '쓰는 중'은 아직 제출 안 한 학생이 쓰던 내용이에요(자동저장된 데까지).
       </div>
       <div id="letterBox"></div>
     </section>
@@ -692,11 +696,16 @@ function letterDate(l) {
   const d = l.createdAt && l.createdAt.toDate ? l.createdAt.toDate() : null;
   return d ? `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}` : '';
 }
-function letterHtml(l) {
+function draftTime(d) {
+  const t = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate() : null;
+  return t ? `${t.getMonth() + 1}.${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : '';
+}
+function letterHtml(l, isDraft) {
   const kws = l.keywords || [];
   let h = '';
   h += `<div class="l-sub">${escapeHtml([l.artworkTitle, l.artistName, l.medium].filter(Boolean).join(' · '))}</div>`;
-  h += `<div class="l-meta">${escapeHtml(letterDate(l))}${letterDate(l) ? ' 작성' : ''}</div>`;
+  if (isDraft) h += `<div class="l-meta">${draftTime(l) ? '마지막 저장 ' + escapeHtml(draftTime(l)) : ''}</div>`;
+  else h += `<div class="l-meta">${escapeHtml(letterDate(l))}${letterDate(l) ? ' 작성' : ''}</div>`;
   h += `<div class="l-content">${l.introHtml || ''}</div>`;
   if (kws.length) h += `<div class="l-kw">${kws.map(k => `<span>${escapeHtml(k)}</span>`).join('')}</div>`;
   if (l.artistHtml) h += `<div class="l-label">작가 이야기</div><div class="l-content">${l.artistHtml}</div>`;
@@ -717,25 +726,60 @@ function letterHtml(l) {
   return h;
 }
 
+// 레터 모아보기: 제출한 레터 + 아직 안 낸 학생이 쓰던 내용
+let letterView = '전부';   // '전부' | '제출' | '쓰는 중'
+function pickLetterView(v) { letterView = v; renderLetters(); }
 function renderLetters() {
-  const list = letters
-    .filter(l => activeClass === '전체' || l.className === activeClass)
-    .sort((a, b) => (a.className || '').localeCompare(b.className || '', 'ko')
-      || (Number(a.studentNumber) || 0) - (Number(b.studentNumber) || 0));
+  const vb = el('viewChips');
+  vb.innerHTML = '';
+  ['전부', '제출', '쓰는 중'].forEach(v => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (v === letterView ? ' on' : '');
+    b.textContent = v;
+    b.onclick = () => pickLetterView(v);
+    vb.appendChild(b);
+  });
+
+  const students = buildStudents().filter(inClass);
+  const list = [];
+  if (letterView !== '쓰는 중') {
+    // 예시 레터는 '전체'에서만
+    if (activeClass === '전체') letters.filter(isSample).forEach(l => list.push({ l, sample: true }));
+    const sids = new Set(students.map(s => s.sid));
+    // 학번 없는 옛 레터는 '전체'에서만
+    letters.filter(l => !isSample(l) && (l.sid ? sids.has(l.sid) : activeClass === '전체')).forEach(l => list.push({ l }));
+  }
+  if (letterView !== '제출') {
+    students.filter(s => !s.letter && s.draft).forEach(s => list.push({ l: s.draft, draft: true }));
+  }
+  list.sort((a, b) => (b.sample ? 1 : 0) - (a.sample ? 1 : 0)
+    || (a.l.className || '').localeCompare(b.l.className || '', 'ko')
+    || (Number(a.l.studentNumber) || 0) - (Number(b.l.studentNumber) || 0));
+
   const box = el('letterBox');
-  if (!list.length) { box.innerHTML = '<div class="muted">아직 제출된 레터가 없어요.</div>'; return; }
+  if (!list.length) {
+    box.innerHTML = `<div class="muted">${letterView === '쓰는 중' ? '쓰는 중인 학생이 없어요.' : '아직 제출된 레터가 없어요.'}</div>`;
+    return;
+  }
+  // 다시 그려도 펼쳐둔 건 그대로 (쓰는 중 내용이 실시간으로 바뀌어서)
+  const opened = new Set(Array.from(box.querySelectorAll('.letter-item'))
+    .filter(it => !it.querySelector('.letter-body').classList.contains('hidden')).map(it => it.dataset.key));
   box.innerHTML = '';
-  list.forEach(l => {
+  list.forEach(({ l, sample, draft }) => {
+    const key = (draft ? 'd:' : 'l:') + (l.id || l.sid);
+    const open = opened.has(key);
     const item = document.createElement('div');
-    item.className = 'letter-item';
-    const who = isSample(l) ? '예시' : `${l.className || ''} ${l.studentNumber || ''}번 ${l.studentName || ''}`;
+    item.className = 'letter-item' + (draft ? ' is-draft' : '');
+    item.dataset.key = key;
+    const who = sample ? '예시' : `${l.className || ''} ${l.studentNumber || ''}번 ${l.studentName || ''}`;
     item.innerHTML = `
       <button class="letter-head" type="button">
         <span class="letter-who">${escapeHtml(who)}</span>
+        ${draft ? '<span class="draft-tag">쓰는 중</span>' : ''}
         <span class="letter-title">${escapeHtml(l.letterTitle || '(제목 없음)')}</span>
-        <span class="letter-arrow">＋</span>
+        <span class="letter-arrow">${open ? '－' : '＋'}</span>
       </button>
-      <div class="letter-body hidden">${letterHtml(l)}</div>`;
+      <div class="letter-body${open ? '' : ' hidden'}">${letterHtml(l, draft)}</div>`;
     const head = item.querySelector('.letter-head');
     const body = item.querySelector('.letter-body');
     const arrow = item.querySelector('.letter-arrow');
