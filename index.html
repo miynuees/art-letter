@@ -259,7 +259,20 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
   color:var(--sage-deep); font-weight:700; font-size:12.5px; border-radius:10px;
 }
 .draft-hint{font-size:11px; color:var(--sub); line-height:1.5; margin:7px 0 10px;}
-.draft-status{text-align:center; font-size:11.5px; color:var(--sub); margin:-2px 0 10px; min-height:14px;}
+.draft-status{
+  position:fixed; top:10px; right:12px; z-index:30; pointer-events:none;
+  background:rgba(255,254,251,.94); border:1px solid var(--line); border-radius:999px;
+  padding:5px 11px; font-size:11.5px; font-weight:700; color:var(--sub); box-shadow:0 4px 12px rgba(150,120,90,.12);
+}
+.draft-status:empty{display:none;}
+.draft-status.fail{color:var(--danger); border-color:#e8c4c4;}
+/* 아이폰은 16px보다 작은 입력칸을 누르면 화면을 확대해버려서, 폰에서는 16px로 */
+@media (max-width:640px){
+  #screen-write .field input, #screen-write .field textarea, #screen-write .rich-editor{font-size:16px;}
+}
+/* 빠진 칸으로 데려갔을 때 잠깐 표시 */
+.need-fill{animation:needFill 1.6s ease;}
+@keyframes needFill{0%,60%{box-shadow:0 0 0 3px rgba(201,123,90,.45);} 100%{box-shadow:none;}}
 
 /* ───── 키워드별 설명 블록 ───── */
 .kw-block{margin-bottom:18px;}
@@ -640,6 +653,7 @@ function enterGallery() {
 let WRITE_OPEN = true;
 function watchMode() {
   settingsRef().onSnapshot(doc => {
+    flushAutoSave();
     WRITE_OPEN = !(doc.exists && doc.data() && doc.data().mode === 'research');
     applyMode();
   }, err => console.error('기간 설정을 불러오지 못했어요', err));
@@ -886,6 +900,8 @@ function openWrite() {
   el('screen-gallery').classList.add('hidden');
   el('screen-write').classList.remove('hidden');
   window.scrollTo(0, 0);
+  // 폰의 '뒤로' 동작이 사이트를 벗어나지 않고 목록으로 돌아오게
+  try { history.pushState({ artWrite: 1 }, ''); } catch (e) {}
   if (!hasDraftContent()) autoLoadDraft();   // 쓰다 만 게 있으면 알아서 이어서
 }
 const INPUT_IDS = ['f-artwork','f-artist','f-medium','f-title','kw-1','kw-2','kw-3','f-summary','f-sources'];
@@ -894,15 +910,25 @@ function hasDraftContent() {
   return INPUT_IDS.some(id => el(id).value.trim());
 }
 function closeWrite() {
-  if (hasDraftContent() && !confirm('작성 중인 내용이 사라져요. 나갈까요?')) return;
+  if (history.state && history.state.artWrite) { history.back(); return; }  // popstate에서 마저 닫힘
+  leaveWrite();
+}
+// 쓰던 내용은 학번으로 저장돼 있으니, 나갈 때 묻지 않고 마지막 내용까지 저장하고 나간다
+function leaveWrite() {
+  if (el('screen-write').classList.contains('hidden')) return;
+  const had = hasDraftContent();
+  flushAutoSave();
   resetForm();
   el('screen-write').classList.add('hidden');
   el('screen-gallery').classList.remove('hidden');
+  if (had && WRITE_OPEN) toast('쓰던 내용은 저장해뒀어요. 다시 들어오면 이어서 쓸 수 있어요');
 }
+window.addEventListener('popstate', leaveWrite);
 function resetForm() {
   INPUT_IDS.forEach(id => el(id).value = '');
   RICH_IDS.forEach(id => { el(id).innerHTML = ''; savedRanges.delete(id); });
   clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
   el('draftStatus').textContent = '';
   syncKeywordLabels();
 }
@@ -961,8 +987,17 @@ let autoSaveTimer = null;
 function scheduleAutoSave() {
   clearTimeout(autoSaveTimer);
   if (!WRITE_OPEN) return;
-  autoSaveTimer = setTimeout(saveDraft, 1500);
+  autoSaveTimer = setTimeout(() => { autoSaveTimer = null; saveDraft(); }, 1500);
 }
+// 기다리는 중인 저장이 있으면 지금 바로 저장 (화면 닫기·앱 전환 직전)
+function flushAutoSave() {
+  if (!autoSaveTimer) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+  saveDraft();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushAutoSave(); });
+window.addEventListener('pagehide', flushAutoSave);
 function saveDraft() {
   if (!WRITE_OPEN) return;
   const key = draftKey();
@@ -986,10 +1021,22 @@ function saveDraft() {
     sourcesText: el('f-sources').value.trim(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
+  const size = JSON.stringify(data).length;
+  if (size > 950000) {
+    statusEl.className = 'draft-status fail';
+    statusEl.textContent = '저장 안 됨 · 사진이 너무 많아요';
+    toast('사진 용량이 너무 커서 저장이 안 돼요. 사진을 몇 장 빼주세요');
+    return;
+  }
+  statusEl.className = 'draft-status';
   statusEl.textContent = '저장 중...';
   draftsRef().doc(key).set(data)
-    .then(() => { statusEl.textContent = '임시저장됨 · ' + nowTimeLabel(); })
-    .catch(e => { console.error(e); statusEl.textContent = '임시저장 실패'; });
+    .then(() => { statusEl.className = 'draft-status'; statusEl.textContent = '임시저장됨 · ' + nowTimeLabel(); })
+    .catch(e => {
+      console.error(e);
+      statusEl.className = 'draft-status fail';
+      statusEl.textContent = '저장 안 됨 · 인터넷 확인';
+    });
 }
 
 /* ───── 에디터: 선택영역 저장/복원 (에디터별로 따로 관리) ───── */
@@ -999,8 +1046,18 @@ function saveSelectionFor(id) {
   const sel = window.getSelection();
   if (sel.rangeCount > 0 && ed.contains(sel.anchorNode)) savedRanges.set(id, sel.getRangeAt(0).cloneRange());
 }
+// 폰에서 선택 손잡이를 끌면 mouseup/keyup이 안 와서, 선택이 바뀔 때마다 직접 기억해둔다
+document.addEventListener('selectionchange', () => {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const id = RICH_IDS.find(i => el(i) && el(i).contains(sel.anchorNode));
+  if (id) savedRanges.set(id, sel.getRangeAt(0).cloneRange());
+});
 function restoreSelectionFor(id) {
   const ed = el(id);
+  const cur = window.getSelection();
+  // 지금 이 칸 안에 글자가 선택돼 있으면 그대로 쓴다 (기억해둔 옛 범위로 덮어쓰지 않음)
+  if (cur.rangeCount && !cur.isCollapsed && ed.contains(cur.anchorNode) && ed.contains(cur.focusNode)) return;
   ed.focus();
   const sel = window.getSelection();
   const saved = savedRanges.get(id);
@@ -1017,8 +1074,8 @@ function restoreSelectionFor(id) {
 }
 
 /* ───── 서식 명령 (id로 대상 에디터 지정) ───── */
-function cmdBold(id) { restoreSelectionFor(id); document.execCommand('bold'); saveSelectionFor(id); }
-function cmdUnderline(id) { restoreSelectionFor(id); document.execCommand('underline'); saveSelectionFor(id); }
+function cmdBold(id) { restoreSelectionFor(id); document.execCommand('bold'); saveSelectionFor(id); scheduleAutoSave(); }
+function cmdUnderline(id) { restoreSelectionFor(id); document.execCommand('underline'); saveSelectionFor(id); scheduleAutoSave(); }
 function cmdDivider(id) {
   restoreSelectionFor(id);
   document.execCommand('insertHTML', false,
@@ -1040,6 +1097,7 @@ function cmdSize(id, px) {
   nr.selectNodeContents(span);
   sel.addRange(nr);
   saveSelectionFor(id);
+  scheduleAutoSave();
 }
 
 /* ───── 이모지 ───── */
@@ -1094,6 +1152,7 @@ function handleImageFile(evt) {
     restoreSelectionFor(id);
     document.execCommand('insertHTML', false, `<img src="${dataUrl}" alt="">`);
     saveSelectionFor(id);
+    scheduleAutoSave();
   });
 }
 function compressImage(file, cb) {
@@ -1132,8 +1191,39 @@ function toolbarTemplate(id) {
       <button type="button" class="tb-btn" title="이모지" onmousedown="event.preventDefault()" onclick="toggleEmojiPop(event,'${id}')">🙂</button>
     </div>`;
 }
+// 웹페이지에서 복사해 붙이면 글꼴·색·링크·외부 사진이 딸려 와서 제출할 때 사진이 사라진다.
+// 글자는 글자만, 사진 파일은 압축해서 넣는다.
+function insertImageFiles(id, files) {
+  const imgs = Array.from(files || []).filter(f => f.type && f.type.startsWith('image/'));
+  imgs.forEach(f => compressImage(f, (dataUrl) => {
+    restoreSelectionFor(id);
+    document.execCommand('insertHTML', false, `<img src="${dataUrl}" alt="">`);
+    saveSelectionFor(id);
+    scheduleAutoSave();
+  }));
+  return imgs.length;
+}
+function pasteOrDrop(id, data) {
+  if (insertImageFiles(id, data.files)) return;
+  const text = data.getData('text/plain') || '';
+  if (/<img/i.test(data.getData('text/html') || '') && !text.trim()) {
+    toast('사진은 기기에 저장한 뒤 🖼️ 버튼으로 넣어주세요');
+    return;
+  }
+  if (text) document.execCommand('insertText', false, text);
+}
 function bindRichEditor(id) {
   const ed = el(id);
+  ed.addEventListener('paste', (e) => {
+    if (!e.clipboardData) return;
+    e.preventDefault();
+    pasteOrDrop(id, e.clipboardData);
+  });
+  ed.addEventListener('drop', (e) => {
+    if (!e.dataTransfer) return;
+    e.preventDefault();
+    pasteOrDrop(id, e.dataTransfer);
+  });
   const save = () => saveSelectionFor(id);
   ed.addEventListener('keyup', save);
   ed.addEventListener('mouseup', save);
@@ -1142,6 +1232,7 @@ function bindRichEditor(id) {
     if (e.target.classList.contains('hr-del')) {
       e.target.closest('.hr-wrap').remove();
       save();
+      scheduleAutoSave();
     }
   });
 }
@@ -1226,16 +1317,29 @@ function submitLetter() {
   const summaryText = el('f-summary').value.trim();
   const sourcesText = el('f-sources').value.trim();
 
-  if (!artworkTitle) { toast('소개할 작품명을 입력해주세요'); return; }
-  if (!letterTitle) { toast('레터 제목을 입력해주세요'); return; }
-  if (!stripTags(introHtml)) { toast('1. 도입을 채워주세요'); return; }
-  if (!stripTags(artistHtml)) { toast('2. 작가 이야기를 채워주세요'); return; }
-  if (keywords.length < 3) { toast('3. 키워드 3개를 모두 입력해주세요'); return; }
+  // 빠진 칸이 있으면 알려주고 그 칸으로 데려간다
+  const need = (msg, id) => {
+    toast(msg);
+    const target = el(id);
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.remove('need-fill'); void target.offsetWidth; target.classList.add('need-fill');
+    setTimeout(() => target.focus({ preventScroll: true }), 400);
+  };
+  if (!artworkTitle) { need('소개할 작품명을 입력해주세요', 'f-artwork'); return; }
+  if (!letterTitle) { need('레터 제목을 입력해주세요', 'f-title'); return; }
+  if (!stripTags(introHtml)) { need('1. 도입을 채워주세요', 'editor-intro'); return; }
+  if (!stripTags(artistHtml)) { need('2. 작가 이야기를 채워주세요', 'editor-artist'); return; }
+  if (keywords.length < 3) {
+    const emptyKw = ['kw-1', 'kw-2', 'kw-3'].find(k => !el(k).value.trim());
+    need('3. 키워드 3개를 모두 입력해주세요', emptyKw); return;
+  }
   const emptyIdx = detailHtmls.findIndex(h => !stripTags(h));
-  if (emptyIdx >= 0) { toast(`4. '${keywords[emptyIdx]}' 설명을 채워주세요`); return; }
-  if (!stripTags(closingHtml)) { toast('5. 마무리를 채워주세요'); return; }
-  if (!summaryText) { toast('6. 요약을 채워주세요'); return; }
-  if (!sourcesText) { toast('7. 참고한 자료(출처)를 적어주세요'); return; }
+  if (emptyIdx >= 0) { need(`4. '${keywords[emptyIdx]}' 설명을 채워주세요`, 'editor-detail-' + (emptyIdx + 1)); return; }
+  if (!stripTags(closingHtml)) { need('5. 마무리를 채워주세요', 'editor-closing'); return; }
+  if (!summaryText) { need('6. 요약을 채워주세요', 'f-summary'); return; }
+  if (!sourcesText) { need('7. 참고한 자료(출처)를 적어주세요', 'f-sources'); return; }
+  const imgCount = (introHtml + artistHtml + detailHtmls.join('') + closingHtml).split('<img').length - 1;
+  if (imgCount < 3 && !confirm(`사진이 ${imgCount}장이에요. 조건 ①은 3장 이상이에요.\n그래도 지금 보낼까요?`)) return;
 
   const totalLen = introHtml.length + artistHtml.length + detailHtmls.join('').length + closingHtml.length;
   if (totalLen > 900000) { toast('내용이 너무 커요. 이미지 개수를 줄여주세요'); return; }
@@ -1257,6 +1361,7 @@ function submitLetter() {
     resetForm();
     el('screen-write').classList.add('hidden');
     el('screen-gallery').classList.remove('hidden');
+    if (history.state && history.state.artWrite) history.back();
   }).catch((e) => {
     console.error(e);
     toast('전송에 실패했어요. 다시 시도해주세요');
