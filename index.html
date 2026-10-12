@@ -326,6 +326,12 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
   box-shadow:0 10px 22px rgba(115,150,110,.28);
 }
 .submit-btn:disabled{opacity:.55;}
+.edit-btn{
+  display:block; width:100%; margin:-6px 0 18px; padding:11px; border-radius:12px;
+  border:1px dashed var(--terracotta); background:#fffaf6; color:var(--terracotta-deep);
+  font-size:13.5px; font-weight:800;
+}
+.edit-banner{background:#fff3e9; border:1px solid #f0d3bf; color:var(--terracotta-deep); border-radius:12px; padding:11px 14px; font-size:12.5px; font-weight:700; line-height:1.6; margin-bottom:14px;}
 .file-input{display:none;}
 
 /* ───── 상세보기 모달 ───── */
@@ -424,8 +430,9 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
   <div class="write-wrap">
     <div class="write-header">
       <button class="back-btn" onclick="closeWrite()">←</button>
-      <h2>아트 레터 쓰기</h2>
+      <h2 id="writeHeading">아트 레터 쓰기</h2>
     </div>
+    <div id="editBanner" class="edit-banner hidden">이미 보낸 레터를 고치고 있어요. 다 고치면 맨 아래 '고친 내용 저장'을 눌러주세요.</div>
 
     <div id="modeBanner" class="mode-banner hidden">지금은 자료조사 기간입니다.</div>
 
@@ -532,6 +539,7 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
     <div class="modal-title" id="m-title"></div>
     <div class="modal-sub" id="m-artwork"></div>
     <div class="modal-meta" id="m-meta"></div>
+    <button class="edit-btn hidden" id="m-edit" onclick="editOpenLetter()">✏️ 이 레터 고치기</button>
     <div class="modal-body" id="m-body"></div>
     <div class="c-wrap">
       <div class="c-label">댓글 <span id="c-count"></span></div>
@@ -860,7 +868,8 @@ function openDetail(letter) {
   el('m-title').textContent = letter.letterTitle || '(제목 없음)';
   el('m-artwork').textContent = [letter.artworkTitle, letter.artistName, letter.medium].filter(Boolean).join(' · ');
   const dateLabel = letterDateLabel(letter);
-  el('m-meta').textContent = dateLabel ? dateLabel + ' 작성' : '';
+  el('m-meta').textContent = (dateLabel ? dateLabel + ' 작성' : '') + (letter.updatedAt ? ' · 고침' : '');
+  el('m-edit').classList.toggle('hidden', !isMyLetter(letter));
 
   const kws = letter.keywords || [];
   const kwHtml = kws.length
@@ -894,15 +903,53 @@ function openDetail(letter) {
 }
 function closeDetail() { openLetterId = null; el('modalOverlay').classList.add('hidden'); }
 
+/* ───── 보낸 레터 고치기 ─────
+   같은 레터 문서를 고친다(새 레터가 생기지 않고, 댓글도 그대로). */
+let EDITING_ID = null;
+function isMyLetter(l) { return !!(ME && !ME.guest && l && l.sid && l.sid === ME.sid && !isSampleLetter(l)); }
+function myLetter() { return allLetters.find(isMyLetter) || null; }   // 최신순이라 첫 번째가 마지막에 낸 것
+function setEditing(id) {
+  EDITING_ID = id || null;
+  el('writeHeading').textContent = EDITING_ID ? '아트 레터 고치기' : '아트 레터 쓰기';
+  el('editBanner').classList.toggle('hidden', !EDITING_ID);
+  el('submitBtn').textContent = EDITING_ID ? '고친 내용 저장 💌' : '레터 보내기 💌';
+}
+function editOpenLetter() {
+  const l = allLetters.find(x => x.id === openLetterId);
+  if (!isMyLetter(l)) return;
+  if (!WRITE_OPEN) { toast('지금은 자료조사 기간입니다.'); return; }
+  closeDetail();
+  startEditing(l);
+}
+function startEditing(l) {
+  showWriteScreen();
+  // 고치던 게 저장돼 있으면 그걸 이어서, 아니면 보낸 레터 그대로
+  draftsRef().doc(ME.sid).get().then(doc => {
+    const d = doc.exists ? doc.data() : null;
+    if (d && d.editingId === l.id) { applyDraftToForm(d); toast('고치던 내용을 이어서 불러왔어요 📥'); }
+    else applyDraftToForm(l);
+    setEditing(l.id);
+  }).catch(() => { applyDraftToForm(l); setEditing(l.id); });
+}
+
 /* ───── 화면 전환 ───── */
 function openWrite() {
+  // 이미 보낸 레터가 있으면 새로 쓰기 전에 물어본다 (실수로 두 편 내지 않게)
+  const mine = myLetter();
+  if (mine && WRITE_OPEN && confirm('이미 보낸 레터가 있어요.\n보낸 레터를 고칠까요?\n\n[확인] 보낸 레터 고치기   [취소] 새 레터 쓰기')) {
+    startEditing(mine); return;
+  }
+  showWriteScreen();
+  if (!hasDraftContent()) autoLoadDraft();   // 쓰다 만 게 있으면 알아서 이어서
+}
+function showWriteScreen() {
+  setEditing(null);
   el('writerLine').textContent = `${ME.className} ${ME.studentNumber}번 ${ME.name}`;
   el('screen-gallery').classList.add('hidden');
   el('screen-write').classList.remove('hidden');
   window.scrollTo(0, 0);
   // 폰의 '뒤로' 동작이 사이트를 벗어나지 않고 목록으로 돌아오게
   try { history.pushState({ artWrite: 1 }, ''); } catch (e) {}
-  if (!hasDraftContent()) autoLoadDraft();   // 쓰다 만 게 있으면 알아서 이어서
 }
 const INPUT_IDS = ['f-artwork','f-artist','f-medium','f-title','kw-1','kw-2','kw-3','f-summary','f-sources'];
 function hasDraftContent() {
@@ -931,6 +978,7 @@ function resetForm() {
   autoSaveTimer = null;
   el('draftStatus').textContent = '';
   syncKeywordLabels();
+  setEditing(null);
 }
 
 /* ───── 중간 저장 (학번으로 식별) ───── */
@@ -965,7 +1013,9 @@ function loadDraft() {
   if (hasDraftContent() && !confirm('지금 작성 중인 내용을 저장된 내용으로 덮어쓸까요?')) return;
   draftsRef().doc(key).get().then(doc => {
     if (!doc.exists) { toast('저장된 내용이 없어요'); return; }
-    applyDraftToForm(doc.data());
+    const d = doc.data();
+    applyDraftToForm(d);
+    setEditing(d.editingId && allLetters.some(l => l.id === d.editingId) ? d.editingId : null);
     toast('저장된 내용을 불러왔어요 📥');
   }).catch(e => { console.error(e); toast('불러오기에 실패했어요'); });
 }
@@ -975,8 +1025,11 @@ function autoLoadDraft() {
   if (!key) return;
   draftsRef().doc(key).get().then(doc => {
     if (!doc.exists) return;
-    applyDraftToForm(doc.data());
-    toast('쓰다 만 내용을 이어서 불러왔어요 📥');
+    const d = doc.data();
+    if (d.editingId && !allLetters.some(l => l.id === d.editingId)) return;   // 고치던 레터가 지워졌으면 무시
+    applyDraftToForm(d);
+    setEditing(d.editingId || null);
+    toast(d.editingId ? '고치던 내용을 이어서 불러왔어요 📥' : '쓰다 만 내용을 이어서 불러왔어요 📥');
   }).catch(() => {});
 }
 function nowTimeLabel() {
@@ -1019,6 +1072,7 @@ function saveDraft() {
     closingHtml: collectRich('editor-closing'),
     summaryText: el('f-summary').value.trim(),
     sourcesText: el('f-sources').value.trim(),
+    editingId: EDITING_ID,      // 보낸 레터를 고치는 중이면 그 레터 id
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   const size = JSON.stringify(data).length;
@@ -1349,15 +1403,19 @@ function submitLetter() {
   const pendingDraftKey = draftKey();
   clearTimeout(autoSaveTimer);
 
-  lettersRef().add({
+  const body = {
     sid, className, studentNumber, studentName,
     artworkTitle, artistName, medium,
     letterTitle, keywords,
-    introHtml, artistHtml, detailHtmls, closingHtml, summaryText, sourcesText,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
+    introHtml, artistHtml, detailHtmls, closingHtml, summaryText, sourcesText
+  };
+  const editing = EDITING_ID;
+  const job = editing
+    ? lettersRef().doc(editing).update(Object.assign(body, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))
+    : lettersRef().add(Object.assign(body, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
+  job.then(() => {
     if (pendingDraftKey) draftsRef().doc(pendingDraftKey).delete().catch(() => {});
-    toast('레터를 보냈어요 💌');
+    toast(editing ? '고친 내용을 저장했어요 💌' : '레터를 보냈어요 💌');
     resetForm();
     el('screen-write').classList.add('hidden');
     el('screen-gallery').classList.remove('hidden');
@@ -1366,7 +1424,7 @@ function submitLetter() {
     console.error(e);
     toast('전송에 실패했어요. 다시 시도해주세요');
   }).finally(() => {
-    btn.disabled = !WRITE_OPEN; btn.textContent = '레터 보내기 💌';
+    btn.disabled = !WRITE_OPEN; btn.textContent = EDITING_ID ? '고친 내용 저장 💌' : '레터 보내기 💌';
   });
 }
 
