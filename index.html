@@ -347,6 +347,14 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
   background:var(--card); border-radius:20px; max-width:640px; width:100%; padding:28px 26px 34px;
   box-shadow:0 24px 60px rgba(0,0,0,.25); position:relative; animation:pop .35s cubic-bezier(.2,.9,.3,1.2);
 }
+/* 공유 주소로 들어오면 그 레터 한 편만 (갤러리·다른 레터로 못 감) */
+body.solo #screen-login, body.solo #screen-gallery, body.solo #screen-write,
+body.solo .modal-close, body.solo #m-edit{display:none !important;}
+body.solo .modal-overlay{position:static; background:none; padding:28px 16px 48px; overflow:visible;}
+body.solo .modal-card{box-shadow:0 10px 30px rgba(120,90,70,.12);}
+.solo-brand{display:none; text-align:center; font-size:13px; font-weight:800; color:var(--terracotta-deep); padding-top:24px;}
+body.solo .solo-brand{display:block;}
+.solo-missing{max-width:640px; margin:40px auto; text-align:center; color:var(--sub); font-size:14.5px; line-height:1.8;}
 @keyframes pop{from{opacity:0; transform:translateY(16px) scale(.98);} to{opacity:1; transform:none;}}
 .modal-close{
   position:absolute; top:16px; right:16px; border:none; background:var(--paper-deep); width:32px; height:32px;
@@ -536,6 +544,7 @@ main{max-width:760px; margin:0 auto; padding:22px 20px 100px;}
 </div>
 
 <!-- ───────── 상세보기 모달 ───────── -->
+<div class="solo-brand">✉️ 아트 레터</div>
 <div id="modalOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeDetail()">
   <div class="modal-card">
     <button class="modal-close" onclick="closeDetail()">✕</button>
@@ -697,7 +706,6 @@ function startListening() {
     allLetters = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderFilters();
     renderGallery();
-    openSharedLetter();
   }, (err) => {
     console.error(err);
     toast('레터를 불러오지 못했어요');
@@ -922,16 +930,14 @@ function openDetail(letter) {
   el('modalOverlay').classList.remove('hidden');
 }
 function closeDetail() {
+  if (SHARED_ID) return;   // 한 편만 보는 화면에선 닫을 곳이 없다
   openLetterId = null;
   el('modalOverlay').classList.add('hidden');
-  // 공유 주소로 들어왔으면 주소창을 원래대로 (새로고침해도 다시 안 열리게)
-  if (location.search) try { history.replaceState(history.state, '', location.pathname); } catch (e) {}
 }
 
 /* ───── 레터 하나만 가리키는 주소 ─────
-   …/art-letter/?l=레터id 로 들어오면 그 레터가 바로 열립니다. 로그인 안 했으면 구경 모드로. */
+   …/art-letter/?l=레터id 로 들어오면 그 레터 한 편만 보여요. 갤러리·다른 레터로는 못 갑니다. */
 const SHARED_ID = new URLSearchParams(location.search).get('l');
-let sharedPending = !!SHARED_ID;
 function letterLink(id) { return location.origin + location.pathname + '?l=' + encodeURIComponent(id); }
 function copyLetterLink() {
   if (!openLetterId) return;
@@ -940,12 +946,18 @@ function copyLetterLink() {
     .then(() => toast('주소를 복사했어요'))
     .catch(() => { prompt('아래 주소를 복사하세요', url); });
 }
-function openSharedLetter() {
-  if (!sharedPending) return;
-  sharedPending = false;
-  const l = allLetters.find(x => x.id === SHARED_ID);
-  if (l) openDetail(l);
-  else toast('이 레터를 찾을 수 없어요');
+function enterSolo() {
+  document.body.classList.add('solo');
+  ME = loadMe() || { guest: true, name: '', className: '', studentNumber: '' };  // 댓글 이름용, 저장은 안 함
+  watchComments();
+  // 그 레터 문서 하나만 읽는다 (고치면 바로 반영)
+  lettersRef().doc(SHARED_ID).onSnapshot(doc => {
+    if (!doc.exists) {
+      el('modalOverlay').outerHTML = '<div class="solo-missing">이 레터를 찾을 수 없어요.<br>주소를 다시 확인해주세요.</div>';
+      return;
+    }
+    openDetail({ id: doc.id, ...doc.data() });
+  }, err => { console.error(err); toast('레터를 불러오지 못했어요'); });
 }
 
 /* ───── 보낸 레터 고치기 ─────
@@ -1493,10 +1505,12 @@ initAutoSave();
 syncKeywordLabels();
 
 /* 이미 들어온 적 있으면 로그인 건너뛰기 */
-ME = loadMe();
-if (!ME && SHARED_ID) ME = { guest: true, name: '', className: '', studentNumber: '' };  // 저장은 안 함
-if (ME) enterGallery();
-else el('lg-sid').focus();
+if (SHARED_ID) enterSolo();
+else {
+  ME = loadMe();
+  if (ME) enterGallery();
+  else el('lg-sid').focus();
+}
 </script>
 </body>
 </html>
