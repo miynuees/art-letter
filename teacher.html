@@ -184,9 +184,10 @@ textarea.roster{
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+.link-copy{margin:0 0 12px; padding:6px 12px; border-radius:999px; border:1px solid #e3d6ca; background:#fff; font-size:12.5px; font-weight:700; cursor:pointer;}
 /* ───── 인쇄(PDF 저장) ───── */
 @media print{
-  .topbar, .bar, .no-print, .toast{display:none !important;}
+  .topbar, .bar, .no-print, .toast, .link-copy{display:none !important;}
   body{background:#fff;}
   main{padding:0; max-width:none;}
   .card, .letter-item{border:none; box-shadow:none; margin:0 0 10px;}
@@ -654,6 +655,14 @@ function deleteStudent(sid) {
   }).catch(e => { console.error(e); toast('지우지 못했어요'); });
 }
 
+// 학생 갤러리에서 이 레터만 바로 열리는 주소
+function copyLetterLink(id) {
+  const url = new URL('./?l=' + encodeURIComponent(id), location.href).href;
+  navigator.clipboard.writeText(url)
+    .then(() => toast('주소를 복사했어요'))
+    .catch(() => { prompt('아래 주소를 복사하세요', url); });
+}
+
 function copyMissing(kind) {
   const mine = buildStudents().filter(inClass);
   const miss = mine.filter(s => kind === 'letter' ? !s.letter : !s.media);
@@ -779,7 +788,10 @@ function renderLetters() {
         <span class="letter-title">${escapeHtml(l.letterTitle || '(제목 없음)')}</span>
         <span class="letter-arrow">${open ? '－' : '＋'}</span>
       </button>
-      <div class="letter-body${open ? '' : ' hidden'}">${letterHtml(l, draft)}</div>`;
+      <div class="letter-body${open ? '' : ' hidden'}">
+        ${draft || !l.id ? '' : `<button class="link-copy" type="button" onclick="copyLetterLink('${l.id}')">🔗 학생용 주소 복사</button>`}
+        ${letterHtml(l, draft)}
+      </div>`;
     const head = item.querySelector('.letter-head');
     const body = item.querySelector('.letter-body');
     const arrow = item.querySelector('.letter-arrow');
