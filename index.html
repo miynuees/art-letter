@@ -652,6 +652,7 @@ function enterGallery() {
   el('screen-gallery').classList.remove('hidden');
   startListening();
   watchComments();
+  watchGroups();
   watchMode();
 }
 
@@ -697,12 +698,24 @@ function startListening() {
   });
 }
 
+// 분반(A반·E반) 필터. 누가 어느 분반인지는 선생님 페이지 명단 탭에서 정한 값을 읽어옵니다.
+const GROUPS = ['A', 'E'];
+let groupOf = {};                 // { 학번: 'A' | 'E' }
+function watchGroups() {
+  db.collection('art_letter_settings').doc('groups').onSnapshot(doc => {
+    groupOf = (doc.exists && doc.data() && doc.data().map) || {};
+    renderGallery();
+  }, err => console.error('분반 정보를 불러오지 못했어요', err));
+}
+function inFilter(letter) {
+  if (activeFilter === '전체' || isSampleLetter(letter)) return true;   // 예시 레터는 어느 분반에서나 보인다
+  return groupOf[letter.sid] + '반' === activeFilter;
+}
+
 function renderFilters() {
-  const classes = Array.from(new Set(allLetters.map(l => l.className).filter(Boolean)));
-  classes.sort((a, b) => a.localeCompare(b, 'ko'));
   const row = el('filterRow');
   row.innerHTML = '';
-  ['전체', ...classes].forEach(name => {
+  ['전체', ...GROUPS.map(g => g + '반')].forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'filter-chip' + (name === activeFilter ? ' active' : '');
     btn.textContent = name;
@@ -723,7 +736,8 @@ function letterDateLabel(letter) {
 
 function renderGallery() {
   const grid = el('galleryGrid');
-  const list = activeFilter === '전체' ? allLetters : allLetters.filter(l => l.className === activeFilter);
+  const shown = allLetters.filter(inFilter);
+  const list = [...shown.filter(isSampleLetter), ...shown.filter(l => !isSampleLetter(l))];   // 예시 레터는 공지 바로 아래
   grid.innerHTML = '';
   grid.appendChild(noticeRow());
   el('emptyState').classList.toggle('hidden', list.length > 0);
